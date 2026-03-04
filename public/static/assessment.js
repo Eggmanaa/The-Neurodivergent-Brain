@@ -97,66 +97,25 @@ const LIKERT_OPTIONS = [
 ];
 
 // ============================================================
-// SCORING ENGINE — v3: Differentiation-Aware Scoring
-//
-// KEY INSIGHTS:
-// 1. Neurotypical is the baseline when ND traits are low.
-// 2. Uniform/flat responding (answering everything the same)
-//    inflates ALL ND scores equally — this is not genuine
-//    multi-profile neurodivergence, it's acquiescence bias.
-// 3. The 6 reverse-coded questions (Q9,19,30,39,49,59)
-//    describe neurotypical strengths. A genuinely ND person
-//    answers these LOW and ND-trait questions HIGH. A flat
-//    responder answers them all the same.
-//
-// APPROACH:
-// 1. Score 13 ND profiles using positive weights
-// 2. Compute a Differentiation Index from reverse-coded Qs
-//    to measure whether the person discriminated between
-//    ND-trait items and NT-strength items
-// 3. Apply differentiation dampening: flat responders get
-//    scores pushed toward zero; discriminating responders
-//    get full credit
-// 4. Compute NT baseline as the inverse of adjusted ND scores
-// 5. Use clinical interpretation tiers for context
+// SCORING ENGINE — Original v1 Simple Weighted Scoring
+// Scores all profiles using NEUROTYPE_ORDER.
+// Neurotypical is included in the scoring but the results page
+// handles it separately — if all ND scores are low (<30%), a
+// note tells the user they likely have a neurotypical brain.
 // ============================================================
 
-const ND_PROFILES = NEUROTYPE_ORDER.filter(id => id !== 'neurotypical');
-
-// The 6 reverse-coded questions (NT-strength items)
-// These describe capabilities that are typically EASY for NT brains
-// and HARD for ND brains. A genuine ND profile should rate these LOW.
-const REVERSE_CODED_QS = [9, 19, 30, 39, 49, 59];
-
-// Interpretation tiers
-const INTERPRETATION_TIERS = [
-  { maxScore: 30, label: 'No Significant Alignment', color: '#8B9DAF',
-    desc: 'Your responses do not suggest significant alignment with this profile. This does not rule anything out — it means this particular screening did not detect strong patterns.' },
-  { maxScore: 45, label: 'Mild Alignment', color: '#FBBF24',
-    desc: 'Some trait patterns are present but not pronounced. This may reflect subclinical traits, situational factors, or overlap from another profile. Worth noting but not necessarily actionable alone.' },
-  { maxScore: 65, label: 'Moderate Alignment', color: '#F97316',
-    desc: 'Notable trait alignment that may be worth exploring with a qualified professional. Patterns at this level often reflect genuine neurological differences that affect daily function.' },
-  { maxScore: 100, label: 'Strong Alignment', color: '#EF4444',
-    desc: 'Strong trait alignment suggesting significant resonance with this profile. Consider professional evaluation if you haven\'t already. This level of alignment typically reflects patterns that meaningfully shape cognition, emotion, and behavior.' }
-];
-
-function getTier(score) {
-  return INTERPRETATION_TIERS.find(t => score <= t.maxScore) || INTERPRETATION_TIERS[INTERPRETATION_TIERS.length - 1];
-}
-
 function calculateAssessmentResults(answers) {
-  // ─── STEP 1: Raw ND Profile Scoring ───
   const scores = {};
   const maxScores = {};
 
-  ND_PROFILES.forEach(nt => {
+  NEUROTYPE_ORDER.forEach(nt => {
     scores[nt] = 0;
     maxScores[nt] = 0;
   });
 
   ASSESSMENT_QUESTIONS.forEach(q => {
     const answer = answers[q.id] !== undefined ? answers[q.id] : 0;
-    ND_PROFILES.forEach(nt => {
+    NEUROTYPE_ORDER.forEach(nt => {
       const weight = q.weights[nt] || 0;
       scores[nt] += answer * weight;
       if (weight > 0) {
@@ -165,123 +124,20 @@ function calculateAssessmentResults(answers) {
     });
   });
 
-  // Raw normalized scores (before differentiation adjustment)
-  const rawNormalized = {};
-  ND_PROFILES.forEach(nt => {
+  // Normalize to 0-100
+  const normalized = {};
+  NEUROTYPE_ORDER.forEach(nt => {
     if (maxScores[nt] > 0) {
-      rawNormalized[nt] = Math.max(0, Math.min(100, Math.round((scores[nt] / maxScores[nt]) * 100)));
+      normalized[nt] = Math.max(0, Math.min(100, Math.round((scores[nt] / maxScores[nt]) * 100)));
     } else {
-      rawNormalized[nt] = 0;
+      normalized[nt] = 0;
     }
   });
 
-  // ─── STEP 2: Differentiation Index ───
-  // Measures how well the person discriminated between ND-trait
-  // and NT-strength questions. Range: 0 (no discrimination) to 1 (perfect).
-  //
-  // Logic: Reverse-coded Qs describe NT strengths (e.g., "I can sustain
-  // attention on routine tasks"). A genuine ND person rates these LOW
-  // and rates ND-trait items HIGH. A flat responder rates them the same.
-  //
-  // We compute:
-  //   avgReverse = average answer on reverse-coded Qs
-  //   avgForward = average answer on all OTHER questions
-  //   gap = avgForward - avgReverse (positive = good discrimination)
-  //   diffIndex = gap normalized to 0-1 range
-
-  const reverseAnswers = REVERSE_CODED_QS.map(id => answers[id] !== undefined ? answers[id] : 0);
-  const forwardQIds = ASSESSMENT_QUESTIONS.filter(q => !REVERSE_CODED_QS.includes(q.id)).map(q => q.id);
-  const forwardAnswers = forwardQIds.map(id => answers[id] !== undefined ? answers[id] : 0);
-
-  const avgReverse = reverseAnswers.reduce((a, b) => a + b, 0) / reverseAnswers.length;
-  const avgForward = forwardAnswers.reduce((a, b) => a + b, 0) / forwardAnswers.length;
-
-  // Gap: how much higher forward (ND-trait) answers are vs reverse (NT-strength)
-  // Perfect ND: avgForward=4, avgReverse=0 → gap=4
-  // Flat responder: avgForward=2, avgReverse=2 → gap=0
-  // Perfect NT: avgForward=0, avgReverse=4 → gap=-4
-  const rawGap = avgForward - avgReverse;
-
-  // Normalize gap to a 0-1 differentiation index
-  // gap of 0 or negative = 0 differentiation (flat or NT-leaning)
-  // gap of 2+ = full differentiation (strong discrimination)
-  const diffIndex = Math.max(0, Math.min(1, rawGap / 2.0));
-
-  // ─── STEP 3: Score Variance Check ───
-  // Additional check: if all ND scores cluster tightly together,
-  // that signals undifferentiated responding, not genuine multi-profile.
-  const rawScoreValues = ND_PROFILES.map(nt => rawNormalized[nt]);
-  const rawMean = rawScoreValues.reduce((a, b) => a + b, 0) / rawScoreValues.length;
-  const rawVariance = rawScoreValues.reduce((a, b) => a + Math.pow(b - rawMean, 2), 0) / rawScoreValues.length;
-  const rawStdDev = Math.sqrt(rawVariance);
-
-  // Coefficient of variation: how spread out are the scores?
-  // Low CV (< 0.15) = all profiles scored similarly = flat responding
-  // High CV (> 0.4) = genuine differentiation between profiles
-  const cv = rawMean > 0 ? rawStdDev / rawMean : 0;
-
-  // Profile spread factor: boosts when scores are differentiated
-  // Minimum 0.3 (always allow some score through), max 1.0
-  const spreadFactor = Math.max(0.3, Math.min(1, cv / 0.35));
-
-  // ─── STEP 4: Combined Dampening Factor ───
-  // Combines differentiation index (reverse-coded Q check) with
-  // profile spread factor (variance check) for robust flat-response detection.
-  //
-  // For flat responders: diffIndex ≈ 0, spreadFactor ≈ 0.3 → dampening ≈ 0.15
-  // For discriminating responders: diffIndex ≈ 1, spreadFactor ≈ 1 → dampening ≈ 1.0
-  // For mixed: partial dampening proportional to discrimination quality
-  const dampening = Math.max(0.1, Math.min(1, (diffIndex * 0.65 + spreadFactor * 0.35)));
-
-  // ─── STEP 5: Apply Dampening to ND Scores ───
-  const normalized = {};
-  ND_PROFILES.forEach(nt => {
-    normalized[nt] = Math.max(0, Math.min(100, Math.round(rawNormalized[nt] * dampening)));
-  });
-
-  // ─── STEP 6: Summary Statistics ───
-  const ndScores = ND_PROFILES.map(nt => normalized[nt]);
-  const maxNdScore = Math.max(...ndScores);
-
-  // ─── STEP 7: Sort and Classify ───
-  const sortedNd = ND_PROFILES
+  // Sort by score descending
+  const sorted = NEUROTYPE_ORDER
     .map(nt => ({ id: nt, score: normalized[nt], name: NEUROTYPES[nt].name, color: NEUROTYPES[nt].color }))
     .sort((a, b) => b.score - a.score);
 
-  const topScore = sortedNd[0].score;
-  const significantProfiles = sortedNd.filter(p => p.score >= 30);
-  
-  // Profile summary — no longer classifies as 'neurotypical-predominant'
-  // If no profile reaches 30%, a note will be shown that the person likely has a neurotypical brain
-  let profileSummary;
-  if (topScore < 30) {
-    profileSummary = 'low-alignment';
-  } else if (topScore < 45) {
-    profileSummary = 'mild-traits';
-  } else if (significantProfiles.length >= 3 && significantProfiles[2].score >= 45) {
-    profileSummary = 'multi-profile';
-  } else {
-    profileSummary = 'profile-aligned';
-  }
-
-  // Flag if flat responding was detected
-  // Conditions: low ND-direction differentiation AND not NT-direction differentiated
-  // AND raw scores were high enough that dampening actually mattered
-  // Key: if rawGap is negative (NT-leaning), that's NOT flat responding
-  const absoluteGap = Math.abs(avgForward - avgReverse);
-  const flatResponseDetected = diffIndex < 0.25 && absoluteGap < 0.5 && rawMean > 10;
-
-  return {
-    normalized,
-    sorted: sortedNd,
-    raw: scores,
-    topScore,
-    significantProfiles,
-    profileSummary,
-    // Diagnostic metadata for results display
-    diffIndex: Math.round(diffIndex * 100),
-    dampening: Math.round(dampening * 100),
-    flatResponseDetected,
-    rawTopScore: Math.max(...Object.values(rawNormalized))
-  };
+  return { normalized, sorted, raw: scores };
 }
