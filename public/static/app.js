@@ -7,7 +7,7 @@
 let currentSection = 'home';
 let currentProfile = 'neurotypical';
 let assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: false };
-let explorerState = { brainA: null, brainB: null };
+let explorerState = { brainA: null, brainB: null, view: 'narrative' };
 
 // ==================== NAVIGATION ====================
 function navigateTo(section, sub) {
@@ -489,7 +489,20 @@ function renderExplorer() {
       </div>
     </div>
 
-    ${explorerState.brainA && explorerState.brainB ? renderPairingReport() : `
+    ${explorerState.brainA && explorerState.brainB ? `
+      <!-- View Toggle -->
+      <div class="flex justify-center mb-6">
+        <div class="view-toggle">
+          <button onclick="setExplorerView('narrative')" class="view-toggle-btn ${explorerState.view === 'narrative' ? 'active' : ''}">
+            <i class="fas fa-scroll mr-1.5"></i>Relationship Narrative
+          </button>
+          <button onclick="setExplorerView('table')" class="view-toggle-btn ${explorerState.view === 'table' ? 'active' : ''}">
+            <i class="fas fa-table mr-1.5"></i>Side-by-Side Comparison
+          </button>
+        </div>
+      </div>
+      ${explorerState.view === 'narrative' ? renderPairingReport() : renderComparisonTable()}
+    ` : `
       <div class="text-center py-16 bg-mid-navy/30 border border-light-navy/30 rounded-2xl">
         <i class="fas fa-brain text-4xl text-steel-blue/30 mb-4"></i>
         <p class="text-steel-blue">Select two brain types above to see their relationship dynamics.</p>
@@ -500,6 +513,77 @@ function renderExplorer() {
 
 function selectBrainA(id) { explorerState.brainA = id; document.getElementById('app').innerHTML = renderExplorer(); }
 function selectBrainB(id) { explorerState.brainB = id; document.getElementById('app').innerHTML = renderExplorer(); }
+function setExplorerView(view) { explorerState.view = view; document.getElementById('app').innerHTML = renderExplorer(); }
+
+function renderComparisonTable() {
+  const table = generateComparisonTable(explorerState.brainA, explorerState.brainB);
+  if (!table) return '<p class="text-steel-blue">Unable to generate comparison table.</p>';
+  
+  const a = table.brainA;
+  const b = table.brainB;
+
+  return `
+    <div class="section-enter">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-mid-navy to-light-navy/50 border border-light-navy/50 rounded-2xl p-6 md:p-8 mb-8">
+        <div class="flex items-center justify-center gap-6 mb-4">
+          <div class="text-center">
+            <img src="${a.icon}" alt="${a.name}" class="w-16 h-16 rounded-full mx-auto border-3" style="border-color:${a.color}">
+            <span class="text-sm font-medium mt-2 block" style="color:${a.color}">${a.name}</span>
+          </div>
+          <div class="text-electric-teal text-2xl"><i class="fas fa-arrows-left-right"></i></div>
+          <div class="text-center">
+            <img src="${b.icon}" alt="${b.name}" class="w-16 h-16 rounded-full mx-auto border-3" style="border-color:${b.color}">
+            <span class="text-sm font-medium mt-2 block" style="color:${b.color}">${b.name}</span>
+          </div>
+        </div>
+        <h3 class="font-display font-bold text-xl text-warm-white text-center mb-3">How These Brains Experience the World Differently</h3>
+        <p class="text-steel-blue text-center text-sm leading-relaxed max-w-2xl mx-auto">A dimension-by-dimension comparison of how each brain shows up in relationships \u2014 where they collide, where they complement, and what each needs the other to understand.</p>
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="comparison-table-container">
+        <table class="comparison-table" style="--brain-a-color:${a.color};--brain-b-color:${b.color}">
+          <thead>
+            <tr>
+              <th class="text-steel-blue/60"><i class="fas fa-layer-group mr-1.5"></i>Dimension</th>
+              <th>
+                <div class="col-header-brain" style="color:${a.color}">
+                  <img src="${a.icon}" alt="" style="border-color:${a.color}">
+                  <span>${a.name}</span>
+                </div>
+              </th>
+              <th>
+                <div class="col-header-brain" style="color:${b.color}">
+                  <img src="${b.icon}" alt="" style="border-color:${b.color}">
+                  <span>${b.name}</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            ${table.rows.map(row => `
+              <tr>
+                <td>
+                  <div class="dim-icon-cell">
+                    <i class="fas ${row.icon}" style="color:${row.color}"></i>
+                    <div class="dim-label-text">${row.label}</div>
+                  </div>
+                </td>
+                <td data-brain-a="${a.name}" style="--brain-a-color:${a.color}">${row.brainA}</td>
+                <td data-brain-b="${b.name}" style="--brain-b-color:${b.color}">${row.brainB}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="bg-warm-amber/10 border border-warm-amber/20 rounded-2xl p-5 mt-8">
+        <p class="text-steel-blue text-xs leading-relaxed"><i class="fas fa-exclamation-triangle text-warm-amber mr-2"></i>This comparison is an educational tool for understanding neurological differences in relationships. Every individual is unique \u2014 these profiles describe patterns, not people. Always consult qualified professionals for clinical guidance.</p>
+      </div>
+    </div>`;
+}
 
 function renderPairingReport() {
   const report = generatePairingReport(explorerState.brainA, explorerState.brainB);

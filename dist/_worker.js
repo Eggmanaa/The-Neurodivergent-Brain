@@ -107,6 +107,7 @@ var ye=Object.defineProperty;var qt=e=>{throw TypeError(e)};var Ee=(e,t,r)=>t in
   <script src="/static/data.js"><\/script>
   <script src="/static/assessment.js"><\/script>
   <script src="/static/pairings.js"><\/script>
+  <script src="/static/comparisons.js"><\/script>
   <script src="/static/app.js"><\/script>
 </body>
 </html>`}const Yt=new me,ir=Object.assign({"/src/index.tsx":Ht});let be=!1;for(const[,e]of Object.entries(ir))e&&(Yt.all("*",t=>{let r;try{r=t.executionCtx}catch{}return e.fetch(t.req.raw,t.env,r)}),Yt.notFound(t=>{let r;try{r=t.executionCtx}catch{}return e.fetch(t.req.raw,t.env,r)}),be=!0);if(!be)throw new Error("Can't import modules from ['/src/index.ts','/src/index.tsx','/app/server.ts']");export{Yt as default};

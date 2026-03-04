@@ -123,6 +123,7 @@ function getMainHTML(): string {
   <script src="/static/data.js"></script>
   <script src="/static/assessment.js"></script>
   <script src="/static/pairings.js"></script>
+  <script src="/static/comparisons.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>`
