@@ -742,7 +742,6 @@ function renderComparisonTable() {
       </div>
     </div>`;
 }
-}
 
 function renderPairingReport() {
   const report = generatePairingReport(explorerState.brainA, explorerState.brainB);
