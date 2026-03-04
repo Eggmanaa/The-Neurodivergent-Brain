@@ -378,6 +378,18 @@ function renderAssessmentResults() {
   const summary = r.profileSummary;
   const flatResponse = r.flatResponseDetected;
 
+  // ─── AuDHD Detection ───
+  // Check if BOTH an ADHD-spectrum profile AND an ASD-spectrum profile are elevated
+  const adhdIds = ['adhd-c', 'adhd-i', 'overfocused', 'temporal', 'limbic', 'ringoffire', 'anxious', 'adhd-dyslexia'];
+  const asdIds = ['asd-1', 'asd-2', 'asd-3'];
+  const adhdScores = significant.filter(p => adhdIds.includes(p.id));
+  const asdScores = significant.filter(p => asdIds.includes(p.id));
+  const topAdhd = adhdScores.length > 0 ? adhdScores[0] : null;
+  const topAsd = asdScores.length > 0 ? asdScores[0] : null;
+  // Show AuDHD note if both an ADHD-type and ASD-type score ≥ 40%, and the person didn't already score highest on AuDHD
+  const showAudhdNote = topAdhd && topAsd && topAdhd.score >= 40 && topAsd.score >= 40
+    && !(top3[0] && top3[0].id === 'audhd');
+
   // Build the neurotypical baseline section
   const ntColor = NEUROTYPES.neurotypical.color;
   let ntInterpretation = '';
@@ -465,6 +477,35 @@ function renderAssessmentResults() {
       </div>
     </div>` : ''}
 
+    ${showAudhdNote ? `
+    <!-- AuDHD Recommendation Note -->
+    <div class="bg-gradient-to-r from-[#EC489920] to-[#EC489910] border-2 border-[#EC4899]/40 rounded-2xl p-6 mb-8">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, ${topAdhd.color}40, ${topAsd.color}40)">
+          <i class="fas fa-link text-xl" style="color: #EC4899"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-display font-bold text-lg text-warm-white mb-2">
+            <i class="fas fa-lightbulb text-[#EC4899] mr-2"></i>Consider Starting with AuDHD
+          </h4>
+          <p class="text-steel-blue text-sm leading-relaxed mb-3">
+            Your results show significant alignment with both <strong class="text-warm-white">${topAdhd.name}</strong> (${topAdhd.score}%) and <strong class="text-warm-white">${topAsd.name}</strong> (${topAsd.score}%). When ADHD-spectrum and Autism-spectrum traits co-occur, they create a distinct neurological profile called <strong style="color:#EC4899">AuDHD</strong> \u2014 not simply "ADHD plus Autism" but a unique interaction pattern where the two systems influence and sometimes contradict each other.
+          </p>
+          <p class="text-steel-blue text-sm leading-relaxed mb-4">
+            Research shows AuDHD is <em>neurofunctionally distinct</em> from either condition alone (Rong et al., 2021). The ADHD brain craves novelty and spontaneity; the autistic brain craves routine and predictability. Understanding this internal tug-of-war may explain experiences that neither an ADHD nor an ASD lens captures fully.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="navigateTo('profiles','audhd')" class="px-5 py-2.5 rounded-lg font-display font-semibold text-sm transition-all hover:scale-105" style="background:#EC4899;color:#0A1628">
+              <i class="fas fa-brain mr-1.5"></i>Read the AuDHD Profile
+            </button>
+            <button onclick="explorerState.brainA='${topAdhd.id}';explorerState.brainB='asd-1';navigateTo('explorer')" class="px-5 py-2.5 rounded-lg font-display font-semibold text-sm border-2 transition-all hover:scale-105" style="border-color:#EC489960;color:#EC4899">
+              <i class="fas fa-handshake mr-1.5"></i>Explore ADHD + ASD Pairing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>` : ''}
+
     <!-- All ND Profile Scores -->
     <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-6 mb-8">
       <h3 class="font-display font-semibold text-warm-white mb-4">All Neurodivergent Profile Scores</h3>
@@ -527,6 +568,7 @@ function renderAssessmentResults() {
           <p>Your results show <strong class="text-warm-white">notable trait alignment</strong> with neurodivergent profiles. This is not a diagnosis \u2014 it's a pattern recognition tool that maps your self-reported experience against research-informed profiles.</p>
           <p>Your strongest alignment with <strong class="text-warm-white">${top3[0].name}</strong> (${top3[0].score}%) suggests you may relate most to this brain profile's patterns.</p>
           ${top3.length > 1 && top3[1].score >= 30 ? `<p>Your secondary alignment with <strong class="text-warm-white">${top3[1].name}</strong> (${top3[1].score}%) suggests overlap with these traits as well. Many neurodivergent individuals show multi-profile patterns.</p>` : ''}
+          ${showAudhdNote ? `<p>Because you show significant alignment with both ADHD-spectrum and autism-spectrum traits, we recommend reading the <a onclick="navigateTo('profiles','audhd')" class="text-[#EC4899] hover:underline cursor-pointer font-semibold">AuDHD profile</a> as your starting point. AuDHD describes the unique intersection of these two neurologies \u2014 where the needs of one system often conflict with the other.</p>` : ''}
         `}
         <p class="text-warm-amber/80"><i class="fas fa-exclamation-triangle mr-1"></i> Remember: This is an educational reflection tool, not a clinical assessment. Consider exploring these patterns with a qualified professional for accurate evaluation.</p>
       </div>
@@ -639,41 +681,59 @@ function renderComparisonTable() {
         <p class="text-steel-blue text-center text-sm leading-relaxed max-w-2xl mx-auto">A dimension-by-dimension comparison of how each brain shows up in relationships \u2014 where they collide, where they complement, and what each needs the other to understand.</p>
       </div>
 
-      <!-- Comparison Table -->
-      <div class="comparison-table-container">
-        <table class="comparison-table" style="--brain-a-color:${a.color};--brain-b-color:${b.color}">
-          <thead>
-            <tr>
-              <th class="text-steel-blue/60"><i class="fas fa-layer-group mr-1.5"></i>Dimension</th>
-              <th>
-                <div class="col-header-brain" style="color:${a.color}">
-                  <img src="${a.icon}" alt="" style="border-color:${a.color}">
-                  <span>${a.name}</span>
+      <!-- Dimension Cards (responsive, stacked layout) -->
+      <div class="space-y-6">
+        ${table.rows.map(row => `
+          <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl overflow-hidden">
+            <!-- Dimension Header -->
+            <div class="px-5 py-3 bg-mid-navy/60 border-b border-light-navy/30 flex items-center gap-3">
+              <i class="fas ${row.icon} text-lg" style="color:${row.color}"></i>
+              <div>
+                <h4 class="font-display font-semibold text-warm-white text-sm">${row.label}</h4>
+                <p class="text-steel-blue/60 text-xs">${row.desc}</p>
+              </div>
+            </div>
+
+            <!-- Side-by-Side Brain Descriptions -->
+            <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-light-navy/20">
+              <div class="p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <img src="${a.icon}" alt="" class="w-6 h-6 rounded-full border" style="border-color:${a.color}">
+                  <span class="text-xs font-medium" style="color:${a.color}">${a.name}</span>
                 </div>
-              </th>
-              <th>
-                <div class="col-header-brain" style="color:${b.color}">
-                  <img src="${b.icon}" alt="" style="border-color:${b.color}">
-                  <span>${b.name}</span>
+                <p class="text-steel-blue text-xs leading-relaxed">${row.brainA}</p>
+              </div>
+              <div class="p-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <img src="${b.icon}" alt="" class="w-6 h-6 rounded-full border" style="border-color:${b.color}">
+                  <span class="text-xs font-medium" style="color:${b.color}">${b.name}</span>
                 </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            ${table.rows.map(row => `
-              <tr>
-                <td>
-                  <div class="dim-icon-cell">
-                    <i class="fas ${row.icon}" style="color:${row.color}"></i>
-                    <div class="dim-label-text">${row.label}</div>
-                  </div>
-                </td>
-                <td data-brain-a="${a.name}" style="--brain-a-color:${a.color}">${row.brainA}</td>
-                <td data-brain-b="${b.name}" style="--brain-b-color:${b.color}">${row.brainB}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+                <p class="text-steel-blue text-xs leading-relaxed">${row.brainB}</p>
+              </div>
+            </div>
+
+            ${(row.conflict || row.complement) ? `
+            <!-- Relational Dynamics: Conflict & Complement -->
+            <div class="border-t border-light-navy/20 grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-light-navy/20">
+              ${row.conflict ? `
+              <div class="p-4 bg-[#EF444408]">
+                <div class="flex items-center gap-2 mb-2">
+                  <i class="fas fa-bolt text-xs text-[#EF4444]"></i>
+                  <span class="text-xs font-display font-semibold text-[#EF4444]/80">Where This Creates Friction</span>
+                </div>
+                <p class="text-steel-blue text-xs leading-relaxed">${row.conflict}</p>
+              </div>` : '<div class="p-4"></div>'}
+              ${row.complement ? `
+              <div class="p-4 bg-[#22D3EE08]">
+                <div class="flex items-center gap-2 mb-2">
+                  <i class="fas fa-puzzle-piece text-xs text-[#22D3EE]"></i>
+                  <span class="text-xs font-display font-semibold text-[#22D3EE]/80">Where This Becomes a Strength</span>
+                </div>
+                <p class="text-steel-blue text-xs leading-relaxed">${row.complement}</p>
+              </div>` : '<div class="p-4"></div>'}
+            </div>` : ''}
+          </div>
+        `).join('')}
       </div>
 
       <!-- Disclaimer -->
@@ -681,6 +741,7 @@ function renderComparisonTable() {
         <p class="text-steel-blue text-xs leading-relaxed"><i class="fas fa-exclamation-triangle text-warm-amber mr-2"></i>This comparison is an educational tool for understanding neurological differences in relationships. Every individual is unique \u2014 these profiles describe patterns, not people. Always consult qualified professionals for clinical guidance.</p>
       </div>
     </div>`;
+}
 }
 
 function renderPairingReport() {

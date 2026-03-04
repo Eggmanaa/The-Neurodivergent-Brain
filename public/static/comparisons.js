@@ -1,8 +1,9 @@
 // ============================================================
-// THE NEURODIVERGENT BRAIN — Comparison Table Engine
+// THE NEURODIVERGENT BRAIN — Comparison Table Engine v2
 // Generates rich side-by-side comparison tables for any
 // pairing of 14 neurotype profiles across 16 relational
-// dimensions. Inspired by clinical comparison methodology.
+// dimensions. Now includes per-dimension conflict/complement
+// analysis and relational dynamics.
 // ============================================================
 
 const COMPARISON_DIMENSIONS = [
@@ -317,9 +318,211 @@ const RELATIONAL_PROFILES = {
 
 
 // ============================================================
-// COMPARISON TABLE GENERATOR
-// Takes two neurotype IDs, pulls their relational profiles,
-// and assembles a structured comparison table.
+// RELATIONAL DYNAMICS ENGINE
+// Generates per-dimension conflict and complement analysis
+// for any pair of neurotypes based on their trait profiles.
+// ============================================================
+
+function getRelationalDynamic(dimKey, brainAId, brainBId) {
+  // Returns {conflict, complement} text for this dimension between these two brains
+  const a = RELATIONAL_PROFILES[brainAId];
+  const b = RELATIONAL_PROFILES[brainBId];
+  if (!a || !b) return null;
+
+  // Check for curated dynamics first
+  const pairKey = [brainAId, brainBId].sort().join('|');
+  const curated = CURATED_DYNAMICS[pairKey];
+  if (curated && curated[dimKey]) return curated[dimKey];
+
+  // Generate dynamic conflict/complement based on trait analysis
+  return generateDimensionDynamic(dimKey, brainAId, brainBId);
+}
+
+// Trait extraction helpers for dynamic generation
+function getDimTrait(dimKey, brainId) {
+  const traits = {
+    coreWiring: {
+      neurotypical: 'balanced', 'adhd-c': 'dopamine-seeking', 'adhd-i': 'dopamine-seeking-quiet',
+      overfocused: 'rigid-locked', temporal: 'volatile-storm', limbic: 'low-energy-depression',
+      ringoffire: 'global-hyperactive', anxious: 'threat-scanning', 'adhd-dyslexia': 'dual-bottleneck',
+      dyslexia: 'language-specific', 'asd-1': 'monotropic-deep', 'asd-2': 'monotropic-supported',
+      'asd-3': 'monotropic-comprehensive', audhd: 'paradoxical-dual'
+    },
+    routineSpontaneity: {
+      neurotypical: 'flexible', 'adhd-c': 'novelty-craving', 'adhd-i': 'routine-failing',
+      overfocused: 'routine-rigid', temporal: 'routine-broken-by-episodes', limbic: 'routine-for-survival',
+      ringoffire: 'state-dependent', anxious: 'routine-for-safety', 'adhd-dyslexia': 'routine-failing',
+      dyslexia: 'flexible', 'asd-1': 'routine-dependent', 'asd-2': 'routine-essential',
+      'asd-3': 'routine-critical', audhd: 'paradoxical'
+    },
+    energySocial: {
+      neurotypical: 'moderate', 'adhd-c': 'volatile-high', 'adhd-i': 'low-draining',
+      overfocused: 'selective', temporal: 'unpredictable', limbic: 'chronically-low',
+      ringoffire: 'oscillating', anxious: 'anxiety-expensive', 'adhd-dyslexia': 'interest-gated',
+      dyslexia: 'normal', 'asd-1': 'costly', 'asd-2': 'profoundly-draining',
+      'asd-3': 'managed-externally', audhd: 'contradictory'
+    },
+    conflictStyle: {
+      neurotypical: 'linear-resolution', 'adhd-c': 'immediate-intense', 'adhd-i': 'withdrawal',
+      overfocused: 'repetitive-locked', temporal: 'explosive-unsafe', limbic: 'avoidant-hopeless',
+      ringoffire: 'explosive-multi', anxious: 'avoidant-freeze', 'adhd-dyslexia': 'shame-driven',
+      dyslexia: 'proportional', 'asd-1': 'logical-rigid', 'asd-2': 'overwhelm-meltdown',
+      'asd-3': 'behavioral', audhd: 'unpredictable-dual'
+    },
+    sensoryNeeds: {
+      neurotypical: 'moderate', 'adhd-c': 'seeking-high', 'adhd-i': 'under-responsive',
+      overfocused: 'fixation-pattern', temporal: 'volatile', limbic: 'muted',
+      ringoffire: 'extreme-hyper', anxious: 'vigilant', 'adhd-dyslexia': 'seeking-fatiguing',
+      dyslexia: 'standard', 'asd-1': 'hyper-sensitive', 'asd-2': 'pervasive-intense',
+      'asd-3': 'extreme-pervasive', audhd: 'oscillating'
+    }
+  };
+  return (traits[dimKey] && traits[dimKey][brainId]) || 'typical';
+}
+
+function generateDimensionDynamic(dimKey, brainAId, brainBId) {
+  const aName = NEUROTYPES[brainAId].name;
+  const bName = NEUROTYPES[brainBId].name;
+  const aTrait = getDimTrait(dimKey, brainAId);
+  const bTrait = getDimTrait(dimKey, brainBId);
+
+  // Dynamic conflict/complement generation based on dimensional traits
+  const dynamics = {
+    coreWiring: () => {
+      if (aTrait === bTrait) return { conflict: `Both brains share the same fundamental wiring pattern. While this creates deep mutual understanding, it also means shared blind spots \u2014 neither partner naturally compensates for the other's gaps.`, complement: `The shared neurological architecture creates an intuitive understanding that doesn't need explanation. Both partners 'get it' at a level that outsiders rarely can.` };
+      return { conflict: `These two brains process the world through fundamentally different operating systems. What feels natural to one can feel alien to the other \u2014 creating a persistent translation gap that requires conscious effort from both.`, complement: `The different processing architectures mean each brain catches what the other misses. Together, they have access to a wider cognitive range than either alone.` };
+    },
+    attentionInConversation: () => {
+      return { conflict: `Conversational rhythms collide: ${aName}'s attention style may feel dismissive to ${bName}, while ${bName}'s style may feel demanding or confusing to ${aName}. Neither is being rude \u2014 their brains are running different conversational software.`, complement: `When both partners learn each other's attention language, conversations become richer. Each brain brings a different kind of listening that, combined, captures both the content and the emotional undertone.` };
+    },
+    emotionalRegulation: () => {
+      return { conflict: `Emotional timing and intensity mismatches create the most painful friction. One brain's way of processing emotion can inadvertently trigger or overwhelm the other \u2014 not from lack of care, but from neurological incompatibility in how feelings are experienced and expressed.`, complement: `The different emotional processing styles mean one partner can offer what the other lacks: grounding during intensity, or permission for deeper feeling during flatness. The key is recognizing each style as valid, not broken.` };
+    },
+    conflictStyle: () => {
+      return { conflict: `When disagreements arise, these two brains reach for fundamentally different tools. The mismatch in conflict style often escalates the conflict beyond the original issue \u2014 the fight becomes about HOW they're fighting, not what started it.`, complement: `Understanding that conflict style is neurological, not characterological, transforms fights into problem-solving. When both partners name their conflict neurology ('My brain wants to resolve this now' / 'My brain needs processing time'), the dynamic shifts from blame to collaboration.` };
+    },
+    sensoryNeeds: () => {
+      if (aTrait === bTrait) return { conflict: `Shared sensory profiles can create competition for the same environmental resources. Both may need the same conditions but at different times, creating a scheduling challenge for shared space.`, complement: `Shared sensory understanding means neither partner has to justify their environmental needs. Both know what sensory overload or deprivation feels like, creating natural empathy for accommodations.` };
+      return { conflict: `The sensory environment that one brain needs to function can be the environment that disables the other. Finding shared space that works for both requires creative negotiation and designated zones.`, complement: `Different sensory needs can expand the household's environmental repertoire. One partner's need for stimulation and the other's need for calm can create a home with diverse spaces that serve both.` };
+    },
+    timePlanning: () => {
+      return { conflict: `Time perception and planning differences create daily friction. One partner's 'running late' is the other's 'deliberate disrespect.' One partner's 'over-planning' is the other's 'suffocating control.' The gap between how time feels to each brain is real and persistent.`, complement: `The partner with stronger temporal awareness can serve as a gentle external clock, while the other brings spontaneous flexibility that prevents life from becoming rigid. Together, they can build a temporal rhythm that honors both structure and flow.` };
+    },
+    communicationStyle: () => {
+      return { conflict: `Communication style mismatches are the most frequent source of daily misunderstanding. Pace, directness, processing time, and the balance between explicit and implicit meaning all differ \u2014 creating a relationship where 'we speak different languages' is literally true at a neurological level.`, complement: `When both partners learn to translate, the relationship gains extraordinary communicative range. Direct communication prevents misunderstandings; nuanced communication builds emotional depth. Together, they develop a shared language richer than either could alone.` };
+    },
+    energySocial: () => {
+      return { conflict: `Social energy mismatches create a persistent approach-withdraw dynamic. One partner wants more engagement while the other needs more recovery. Neither is wrong \u2014 but the imbalance can make one feel rejected and the other feel pressured.`, complement: `The partner with more social energy can handle the relationship's external social demands (family gatherings, friend meetups), while the other creates the restorative home environment both ultimately need. Division of social labor by neurological fit.` };
+    },
+    routineSpontaneity: () => {
+      return { conflict: `The routine-spontaneity axis is where neurological differences become most visible in daily life. One brain's essential structure is another's suffocating cage. One brain's exciting flexibility is another's destabilizing chaos.`, complement: `When negotiated consciously, the structure-flexibility balance can create a life that's both stable and interesting. The routine-lover provides the foundation; the novelty-seeker brings the adventure. The key is respecting both needs as legitimate.` };
+    },
+    decisionMaking: () => {
+      return { conflict: `Decision-making pace differences create frustration on both sides. One brain commits before the other has finished processing; the other processes so thoroughly that the first brain's window of motivation closes. Timing is everything \u2014 and their timers are set differently.`, complement: `The fast decider brings momentum; the thorough analyzer brings quality. Together, they can make decisions that are both timely and well-considered \u2014 if they build a process that gives each brain its needed input.` };
+    },
+    intimacyConnection: () => {
+      return { conflict: `Love languages are neurologically determined, not just preferentially chosen. When one brain shows love through presence and the other through action, both partners can feel unloved despite being deeply loved. The gap is in translation, not affection.`, complement: `The different expressions of love, once recognized and valued, create a relationship rich in multiple dimensions of care. Acts of service AND verbal affirmation. Quality time AND special-interest sharing. The love is real on both sides.` };
+    },
+    householdLogistics: () => {
+      return { conflict: `Household task distribution often becomes the concrete manifestation of neurological differences. Executive function gaps, sensory avoidance, and energy limitations create uneven division that can breed resentment if the neurological basis isn't understood.`, complement: `Dividing household tasks by cognitive fit rather than arbitrary equality creates efficiency and reduces resentment. Each partner handles what their brain does best \u2014 the result is a household that runs on neurological strength rather than struggling against deficit.` };
+    },
+    maskingAuthenticity: () => {
+      return { conflict: `Masking differences create an intimacy gap. The heavily-masking partner may feel unseen ('you don't know the real me') while the less-masking partner may feel confused ('who are you when we're not at home?'). The mask is a survival tool, not a deception \u2014 but it can feel like one.`, complement: `The relationship becomes the safe space where masks can drop. When both partners understand the cost of masking, home becomes a sanctuary of authenticity. The trust required for unmasking deepens the bond beyond what surface relationships can achieve.` };
+    },
+    triggerPoint: () => {
+      return { conflict: `Each brain has specific triggers that the other partner may inadvertently activate daily. Understanding that triggers are neurological \u2014 not character defects \u2014 is the first step. The second step is learning each other's trigger map and navigating around the known landmines.`, complement: `Mapped triggers become predictable and manageable. When both partners know each other's neurological flashpoints, they can create proactive accommodations rather than reactive damage control. This level of attunement is rare and deeply bonding.` };
+    },
+    complement: () => {
+      return { conflict: `The very strengths each brain brings can become irritants in close quarters. Reliability can feel like rigidity. Spontaneity can feel like chaos. Depth can feel like obsession. The line between 'strength I admire' and 'trait that exhausts me' is often the line between a good day and a bad day.`, complement: `When both brains operate in their strength zone, the partnership becomes more capable than either individual. The weaknesses of one are genuinely covered by the strengths of the other. This isn't codependence \u2014 it's neurological complementarity.` };
+    },
+    needToUnderstand: () => {
+      return { conflict: `The deepest wound in any neurotype pairing is feeling fundamentally misunderstood \u2014 that your partner sees your neurology as a choice, a character flaw, or something you could fix if you 'just tried harder.' This wound cuts deeper than any specific argument.`, complement: `The deepest gift in any neurotype pairing is being truly understood \u2014 having a partner who sees past the behavior to the brain beneath it, and who says 'I see you struggling, and I know it's not a choice.' This understanding is transformative.` };
+    }
+  };
+
+  const generator = dynamics[dimKey];
+  if (generator) return generator();
+
+  // Fallback for any unmapped dimension
+  return {
+    conflict: `In this dimension, ${aName} and ${bName} may experience friction when their neurological patterns pull in different directions. The key is recognizing that both responses are brain-driven, not character-driven.`,
+    complement: `When both brains bring their strengths to this dimension, the partnership covers ground that neither could alone. The difference, once understood, becomes a resource rather than a liability.`
+  };
+}
+
+
+// ============================================================
+// CURATED DYNAMICS — High-traffic pairings with hand-crafted
+// per-dimension conflict/complement text.
+// ============================================================
+
+const CURATED_DYNAMICS = {
+  'adhd-c|neurotypical': {
+    routineSpontaneity: {
+      conflict: "The NT brain plans a weekend in advance; the ADHD-C brain changes those plans at 10am Saturday because a better idea hit. This cycle repeats weekly. The NT partner feels their planning is disrespected; the ADHD-C partner feels caged by plans that killed the only thing that excited them.",
+      complement: "The NT partner builds the framework that prevents chaos from becoming crisis. The ADHD-C partner injects the spontaneity that prevents the framework from becoming a prison. When negotiated, the balance creates a life that's both stable and alive."
+    },
+    householdLogistics: {
+      conflict: "The NT partner absorbs the executive function burden — bills, appointments, school forms, meal planning — and slowly becomes a resentful household manager. The ADHD-C partner sees the growing resentment but genuinely cannot sustain the consistency required, deepening their shame.",
+      complement: "External systems (autopay, shared calendars, cleaning schedules) remove executive function from the relationship equation. The NT partner's organizational strength paired with the ADHD-C partner's crisis competence means everything gets handled — just through different channels."
+    },
+    emotionalRegulation: {
+      conflict: "ADHD-C's emotions hit fast and loud — a flash of frustration becomes a shouted sentence. The NT partner recoils from the intensity, which triggers RSD in the ADHD-C partner, which escalates the outburst. A 30-second emotional spike can derail an entire evening.",
+      complement: "The NT partner learns to be the emotional anchor — not dismissing the intensity but also not escalating with it. The ADHD-C partner learns to narrate ('I'm having a big feeling but I'm okay'). The combination of passionate engagement and steady grounding creates emotional safety."
+    }
+  },
+  'adhd-c|asd-1': {
+    routineSpontaneity: {
+      conflict: "The collision is almost daily. ASD-1 builds a routine and depends on it for cognitive stability. ADHD-C shatters it because a new idea arrived. For ASD-1, this isn't annoying — it's destabilizing. For ADHD-C, the routine isn't comforting — it's suffocating.",
+      complement: "When they negotiate 'flex windows' inside structured routines, both brains get what they need. ASD-1 keeps the anchors (morning routine, meals, bedtime). ADHD-C gets designated adventure space. The structure has breathing room; the spontaneity has guardrails."
+    },
+    sensoryNeeds: {
+      conflict: "ADHD-C's stimulation-seeking directly conflicts with ASD-1's sensory sensitivity. The loud music that regulates one brain overwhelms the other. The quiet environment that calms one brain agitates the other. The shared living space becomes a daily negotiation.",
+      complement: "Designated zones solve most conflicts: a stimulation room (ADHD-C's workspace with music, movement, creative chaos) and a sanctuary room (ASD-1's sensory-regulated retreat). Noise-canceling headphones become a relationship tool, not just a personal accessory."
+    },
+    conflictStyle: {
+      conflict: "ADHD-C wants resolution NOW — loudly, emotionally, immediately. ASD-1 needs time, logic, and space to process. The ADHD-C partner reads silence as rejection (triggering RSD). The ASD-1 partner reads intensity as threat (triggering shutdown). The escalation cycle is neurological, not intentional.",
+      complement: "A structured conflict protocol honors both: ADHD-C names the emotion immediately ('I'm hurt'). Both take a timed break (30-60 min). They reconvene with an agreed structure (one speaker at a time, specific issue only). ADHD-C gets to be heard; ASD-1 gets processing time."
+    }
+  },
+  'adhd-i|asd-1': {
+    routineSpontaneity: {
+      conflict: "ASD-1 builds systems expecting them to hold. ADHD-I values the systems theoretically but drifts away from them — not by rebellion but by executive dysfunction. The ASD-1 partner watches commitments evaporate and reads it as disrespect for the structure they both agreed to.",
+      complement: "Both brains value depth over breadth. ADHD-I's quiet creative drift and ASD-1's systematic focus can coexist beautifully in parallel work sessions. Neither pressures the other for social performance. The home can be a shared haven of focused quiet."
+    },
+    communicationStyle: {
+      conflict: "ASD-1's direct, literal communication collides with ADHD-I's indirect, reflective style. ASD-1 asks a clear question and gets a tangential response. ADHD-I shares a feeling and gets a logical solution instead of emotional validation. Both feel unheard.",
+      complement: "ADHD-I's intuitive, associative thinking catches implications ASD-1 misses. ASD-1's precise, explicit communication provides the clarity ADHD-I needs. Together, they cover both the logical and emotional dimensions of any conversation."
+    }
+  },
+  'asd-1|audhd': {
+    routineSpontaneity: {
+      conflict: "ASD-1 watches their AuDHD partner build a meticulous system and then violate it the next day. This is uniquely frustrating because the AuDHD partner clearly understands the VALUE of the system — they designed it. The violation feels personal because it appears chosen.",
+      complement: "The ASD-1 partner can serve as the system's guardian — maintaining what the AuDHD partner designed but can't consistently follow. The AuDHD partner provides the creative flexibility that prevents the systems from becoming rigid or obsolete."
+    },
+    sensoryNeeds: {
+      conflict: "ASD-1's sensory needs are consistent and predictable. AuDHD's sensory needs oscillate daily between seeking and avoiding. Yesterday's perfect shared environment is today's impossible compromise. ASD-1 cannot build a stable sensory plan because the AuDHD partner's needs are a moving target.",
+      complement: "Both understand sensory sensitivity at a deep level. The shared autistic foundation means neither has to explain why the 'wrong' texture or sound is a crisis. They speak the same sensory language, even when the dialects differ day-to-day."
+    }
+  },
+  'audhd|neurotypical': {
+    coreWiring: {
+      conflict: "The NT partner encounters what appears to be a walking contradiction — rigid one hour, impulsive the next. The AuDHD partner cannot explain why they need both routine AND novelty because the internal war between systems is pre-verbal. The NT partner's reasonable question 'What do you actually need?' has no single answer.",
+      complement: "The NT brain's consistent processing provides a stable reference point for the AuDHD brain's oscillations. When the NT partner learns to read which system is dominant ('Are you in structure mode or adventure mode today?'), both can navigate more effectively."
+    },
+    maskingAuthenticity: {
+      conflict: "The AuDHD partner is double-masking: suppressing ADHD impulsivity AND autistic traits simultaneously. By the time they reach home, there is nothing left. The NT partner gets the unmasked version — which may be volatile, withdrawn, or paradoxical. The NT partner may feel they only ever get the 'leftovers.'",
+      complement: "Home becomes the only place both masks can drop. When the NT partner accepts that the unmasked AuDHD partner is the real partner, and the public version is the performance, trust deepens. The NT partner's acceptance becomes the most important emotional resource."
+    }
+  }
+};
+
+
+// ============================================================
+// COMPARISON TABLE GENERATOR v2
+// Takes two neurotype IDs, pulls their relational profiles
+// and per-dimension dynamics, and assembles a structured
+// comparison table with conflict/complement analysis.
 // ============================================================
 
 function generateComparisonTable(brainAId, brainBId) {
@@ -331,15 +534,20 @@ function generateComparisonTable(brainAId, brainBId) {
   const profileB = RELATIONAL_PROFILES[brainBId];
   if (!profileA || !profileB) return null;
 
-  const rows = COMPARISON_DIMENSIONS.map(dim => ({
-    key: dim.key,
-    label: dim.label,
-    icon: dim.icon,
-    color: dim.color,
-    desc: dim.desc,
-    brainA: profileA[dim.key] || '',
-    brainB: profileB[dim.key] || ''
-  }));
+  const rows = COMPARISON_DIMENSIONS.map(dim => {
+    const dynamic = getRelationalDynamic(dim.key, brainAId, brainBId);
+    return {
+      key: dim.key,
+      label: dim.label,
+      icon: dim.icon,
+      color: dim.color,
+      desc: dim.desc,
+      brainA: profileA[dim.key] || '',
+      brainB: profileB[dim.key] || '',
+      conflict: dynamic ? dynamic.conflict : '',
+      complement: dynamic ? dynamic.complement : ''
+    };
+  });
 
   return {
     brainA: a,
