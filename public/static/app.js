@@ -76,7 +76,7 @@ function renderHome() {
           <i class="fas fa-compass text-2xl text-warm-amber"></i>
         </div>
         <h3 class="font-display font-semibold text-xl text-warm-white mb-3">Discover Your Brain</h3>
-        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — now scoring against all 14 neurotype profiles. Not a diagnosis — a research-informed reflection tool.</p>
+        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — screening against 13 neurodivergent profiles. If your scores are low across the board, you'll receive a neurotypical baseline result. Not a diagnosis — a research-informed reflection tool.</p>
         <div class="mt-4 text-xs text-steel-blue/60">
           <i class="fas fa-lock mr-1"></i> Privacy-first: all data stays in your browser
         </div>
@@ -292,7 +292,7 @@ function renderAssessmentIntro() {
         <i class="fas fa-compass text-3xl text-electric-teal"></i>
       </div>
       <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-4">Discover Your Brain</h2>
-      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Scoring against 14 neurotype profiles — including Dr. Amen's 7 ADD subtypes. Understand your brain profile — not as a diagnosis, but as a starting point.</p>
+      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Screening against 13 neurodivergent profiles — including Dr. Amen's 7 ADD subtypes. If your scores are low across the board, your result will reflect a predominantly neurotypical cognitive profile. Not a diagnosis — a starting point for understanding.</p>
     </div>
 
     <div class="grid md:grid-cols-3 gap-4 mb-10">
@@ -371,8 +371,73 @@ function finishAssessment() {
 
 function renderAssessmentResults() {
   const r = assessmentState.results;
-  const top3 = r.sorted.slice(0, 3);
-  
+  const top3 = r.sorted.filter(t => t.score > 0).slice(0, 3);
+  const ntBaseline = r.ntBaseline;
+  const topScore = r.topScore;
+  const significant = r.significantProfiles;
+  const summary = r.profileSummary;
+  const flatResponse = r.flatResponseDetected;
+
+  // Build the neurotypical baseline section
+  const ntColor = NEUROTYPES.neurotypical.color;
+  let ntInterpretation = '';
+  if (summary === 'neurotypical-predominant') {
+    ntInterpretation = `<div class="bg-gradient-to-r from-mid-navy/80 to-light-navy/40 border-2 rounded-2xl p-6 mb-8" style="border-color:${ntColor}">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${NEUROTYPES.neurotypical.icon}" alt="Neurotypical" class="w-14 h-14 rounded-full border-2" style="border-color:${ntColor}">
+        <div>
+          <h3 class="font-display font-bold text-xl text-warm-white">Predominantly Neurotypical Profile</h3>
+          <p class="text-steel-blue text-sm">Neurotypical Baseline: <span class="font-bold" style="color:${ntColor}">${ntBaseline}%</span></p>
+        </div>
+      </div>
+      <p class="text-steel-blue leading-relaxed mb-3">Your responses suggest your brain operates predominantly within neurotypical patterns. No neurodivergent profile reached significant alignment (all below 30%).</p>
+      <p class="text-steel-blue leading-relaxed mb-3">This means your attention regulation, sensory processing, executive function, social communication, emotional regulation, and reading/language processing all fall within the range that most social institutions and relationships were designed around.</p>
+      <p class="text-steel-blue leading-relaxed"><strong class="text-warm-white">This is not a limitation.</strong> Understanding neurotypicality is itself valuable — particularly for building empathy with neurodivergent people in your life. Consider reading the <a onclick="navigateTo('profiles','neurotypical')" class="text-electric-teal hover:underline cursor-pointer">Neurotypical profile</a> to understand your brain's own blind spots and strengths.</p>
+    </div>`;
+  } else {
+    ntInterpretation = `<div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-5 mb-8">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-3">
+          <img src="${NEUROTYPES.neurotypical.icon}" alt="Neurotypical" class="w-8 h-8 rounded-full border-2" style="border-color:${ntColor}">
+          <h4 class="font-display font-medium text-warm-white">Neurotypical Baseline</h4>
+        </div>
+        <span class="font-display font-bold text-lg" style="color:${ntColor}">${ntBaseline}%</span>
+      </div>
+      <div class="h-2 bg-light-navy rounded-full overflow-hidden mb-3">
+        <div class="h-full rounded-full" style="width:${ntBaseline}%;background:${ntColor}"></div>
+      </div>
+      <p class="text-steel-blue text-xs leading-relaxed">This reflects the proportion of your cognitive profile that aligns with neurotypical patterns — the complement of your neurodivergent trait endorsement. A lower baseline means stronger ND trait presence; a higher baseline means more of your processing falls within typical ranges.</p>
+    </div>`;
+  }
+
+  // Build significance indicators for top results
+  const topResultsHtml = top3.length > 0 ? top3.map((t, i) => {
+    const tier = getTier(t.score);
+    return `
+      <div class="bg-mid-navy/60 border border-light-navy/50 rounded-xl p-5 flex items-center gap-4">
+        <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-deep-navy font-display font-bold text-lg" style="background:${t.color}">
+          ${i + 1}
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between mb-1">
+            <h4 class="font-display font-semibold text-warm-white">${t.name}</h4>
+            <span class="font-display font-bold text-lg" style="color:${t.color}">${t.score}%</span>
+          </div>
+          <div class="h-2 bg-light-navy rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-1000" style="width:${t.score}%;background:${t.color}"></div>
+          </div>
+          <div class="flex items-center justify-between mt-2">
+            <p class="text-steel-blue text-xs flex-1">${NEUROTYPES[t.id].tagline}</p>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full ml-2 whitespace-nowrap" style="background:${tier.color}20;color:${tier.color}">${tier.label}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('') : `
+    <div class="bg-mid-navy/40 border border-light-navy/30 rounded-xl p-6 text-center">
+      <i class="fas fa-check-circle text-2xl text-soft-green mb-3"></i>
+      <p class="text-steel-blue">No neurodivergent profiles reached significant alignment. Your results suggest a predominantly neurotypical cognitive profile.</p>
+    </div>`;
+
   return `
   <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center justify-between mb-6">
@@ -380,43 +445,33 @@ function renderAssessmentResults() {
       <button onclick="resetAssessment()" class="text-steel-blue hover:text-warm-white text-sm"><i class="fas fa-redo mr-1"></i>Retake</button>
     </div>
 
+    <!-- Neurotypical Baseline -->
+    ${ntInterpretation}
+
     <!-- Radar Chart -->
     <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6 mb-8">
-      <h3 class="font-display font-semibold text-lg text-warm-white mb-4 text-center">Brain Profile Spectrum</h3>
+      <h3 class="font-display font-semibold text-lg text-warm-white mb-4 text-center">Neurodivergent Trait Spectrum</h3>
       <div class="radar-container">
         <canvas id="radarChart" width="500" height="500"></canvas>
       </div>
     </div>
 
+    ${summary !== 'neurotypical-predominant' ? `
     <!-- Top Results -->
     <div class="mb-8">
       <h3 class="font-display font-semibold text-lg text-warm-white mb-4">Your Strongest Alignments</h3>
       <div class="space-y-4">
-        ${top3.map((t, i) => `
-          <div class="bg-mid-navy/60 border border-light-navy/50 rounded-xl p-5 flex items-center gap-4">
-            <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center text-deep-navy font-display font-bold text-lg" style="background:${t.color}">
-              ${i + 1}
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
-                <h4 class="font-display font-semibold text-warm-white">${t.name}</h4>
-                <span class="font-display font-bold text-lg" style="color:${t.color}">${t.score}%</span>
-              </div>
-              <div class="h-2 bg-light-navy rounded-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-1000" style="width:${t.score}%;background:${t.color}"></div>
-              </div>
-              <p class="text-steel-blue text-xs mt-2">${NEUROTYPES[t.id].tagline}</p>
-            </div>
-          </div>
-        `).join('')}
+        ${topResultsHtml}
       </div>
-    </div>
+    </div>` : ''}
 
-    <!-- All Scores -->
+    <!-- All ND Profile Scores -->
     <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-6 mb-8">
-      <h3 class="font-display font-semibold text-warm-white mb-4">All Profile Scores</h3>
+      <h3 class="font-display font-semibold text-warm-white mb-4">All Neurodivergent Profile Scores</h3>
       <div class="space-y-3">
-        ${r.sorted.map(t => `
+        ${r.sorted.map(t => {
+          const tier = getTier(t.score);
+          return `
           <div class="flex items-center gap-3">
             <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:${t.color}"></span>
             <span class="text-sm text-steel-blue w-44 flex-shrink-0">${t.name}</span>
@@ -424,27 +479,70 @@ function renderAssessmentResults() {
               <div class="h-full rounded-full" style="width:${t.score}%;background:${t.color}"></div>
             </div>
             <span class="text-sm font-medium w-12 text-right" style="color:${t.color}">${t.score}%</span>
-          </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-light-navy/30">
+        ${INTERPRETATION_TIERS.map(tier => `
+          <span class="text-xs flex items-center gap-1.5"><span class="w-2 h-2 rounded-full" style="background:${tier.color}"></span><span class="text-steel-blue/60">${tier.label} (0\u2013${tier.maxScore}%)</span></span>
         `).join('')}
       </div>
+      ${r.diffIndex !== undefined ? `
+      <div class="mt-4 pt-4 border-t border-light-navy/30">
+        <details class="text-xs text-steel-blue/50">
+          <summary class="cursor-pointer hover:text-steel-blue">Scoring Details</summary>
+          <div class="mt-2 space-y-1">
+            <p>Response Differentiation: ${r.diffIndex}% — ${r.diffIndex < 25 ? 'Low (answers on NT-strength and ND-trait questions were similar)' : r.diffIndex < 50 ? 'Moderate' : 'Good (clear discrimination between NT-strength and ND-trait items)'}</p>
+            <p>Score Confidence: ${r.dampening}%</p>
+            ${r.flatResponseDetected ? '<p class="text-warm-amber/60">⚠ Flat response pattern detected — scores adjusted</p>' : ''}
+          </div>
+        </details>
+      </div>` : ''}
     </div>
+
+    ${flatResponse ? `
+    <!-- Flat Response Warning -->
+    <div class="bg-warm-amber/10 border border-warm-amber/30 rounded-2xl p-5 mb-8">
+      <div class="flex items-start gap-3">
+        <i class="fas fa-exclamation-triangle text-warm-amber text-lg mt-0.5"></i>
+        <div>
+          <h4 class="font-display font-semibold text-warm-amber mb-2">Response Pattern Notice</h4>
+          <p class="text-steel-blue text-sm leading-relaxed mb-2">Our scoring detected that your answers to questions describing <strong class="text-warm-white">neurotypical strengths</strong> (like sustaining attention on routine tasks, filtering background noise, and managing emotions smoothly) were similar to your answers on <strong class="text-warm-white">neurodivergent trait</strong> questions.</p>
+          <p class="text-steel-blue text-sm leading-relaxed">This pattern — sometimes called <em>acquiescence bias</em> — can occur when answering quickly or when questions feel ambiguous. Your scores have been adjusted to account for this. For the most accurate results, consider retaking the test and paying close attention to the 6 reverse-worded questions that describe things that come <em>easily</em> to you.</p>
+        </div>
+      </div>
+    </div>` : ''}
 
     <!-- Interpretation -->
     <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6 mb-8">
       <h3 class="font-display font-semibold text-warm-white mb-4"><i class="fas fa-info-circle text-electric-teal mr-2"></i>Understanding Your Results</h3>
       <div class="space-y-3 text-steel-blue text-sm leading-relaxed">
-        <p>Your results show trait alignment across a spectrum — this is not a binary label. Most people show traits across multiple profiles.</p>
-        <p>Your strongest alignment with <strong class="text-warm-white">${top3[0].name}</strong> (${top3[0].score}%) suggests you may relate most to this brain profile's patterns.</p>
-        ${top3[1].score > 30 ? `<p>Your secondary alignment with <strong class="text-warm-white">${top3[1].name}</strong> (${top3[1].score}%) suggests overlap with these traits as well.</p>` : ''}
-        <p class="text-warm-amber/80"><i class="fas fa-exclamation-triangle mr-1"></i> Remember: This is an educational reflection tool, not a clinical assessment. Consider exploring these patterns with a qualified professional.</p>
+        ${summary === 'neurotypical-predominant' ? `
+          <p>Your results suggest a <strong class="text-warm-white">predominantly neurotypical cognitive profile</strong>. None of the 13 neurodivergent profiles reached significant alignment (all below 30%). This is a valid and meaningful result.</p>
+          <p>Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. Your low scores suggest these traits do not significantly shape your daily cognitive experience.</p>
+        ` : summary === 'mild-traits' ? `
+          <p>Your results show <strong class="text-warm-white">mild trait alignment</strong> across some neurodivergent profiles. Your highest score of ${topScore}% suggests some resonance with ${top3[0].name} patterns, but below the threshold typically associated with significant functional impact.</p>
+          <p>Mild alignment may reflect subclinical traits, situational stress, or normal human variation. These patterns are worth understanding but may not require clinical attention unless they cause meaningful difficulty in daily life.</p>
+        ` : `
+          <p>Your results show <strong class="text-warm-white">notable trait alignment</strong> with neurodivergent profiles. This is not a diagnosis \u2014 it's a pattern recognition tool that maps your self-reported experience against research-informed profiles.</p>
+          <p>Your strongest alignment with <strong class="text-warm-white">${top3[0].name}</strong> (${top3[0].score}%) suggests you may relate most to this brain profile's patterns.</p>
+          ${top3.length > 1 && top3[1].score >= 30 ? `<p>Your secondary alignment with <strong class="text-warm-white">${top3[1].name}</strong> (${top3[1].score}%) suggests overlap with these traits as well. Many neurodivergent individuals show multi-profile patterns.</p>` : ''}
+        `}
+        <p class="text-warm-amber/80"><i class="fas fa-exclamation-triangle mr-1"></i> Remember: This is an educational reflection tool, not a clinical assessment. Consider exploring these patterns with a qualified professional for accurate evaluation.</p>
       </div>
     </div>
 
     <!-- Actions -->
     <div class="flex flex-wrap gap-4 justify-center">
-      <button onclick="navigateTo('profiles','${top3[0].id}')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
-        <i class="fas fa-brain mr-2"></i>Read ${top3[0].name} Profile
-      </button>
+      ${summary === 'neurotypical-predominant' ? `
+        <button onclick="navigateTo('profiles','neurotypical')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
+          <i class="fas fa-brain mr-2"></i>Read Neurotypical Profile
+        </button>
+      ` : `
+        <button onclick="navigateTo('profiles','${top3[0].id}')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
+          <i class="fas fa-brain mr-2"></i>Read ${top3[0].name} Profile
+        </button>
+      `}
       <button onclick="navigateTo('explorer')" class="px-6 py-3 border-2 border-muted-purple text-muted-purple font-display font-semibold rounded-lg hover:bg-muted-purple/10 transition-all">
         <i class="fas fa-handshake mr-2"></i>Explore Brain Pairs
       </button>
@@ -752,12 +850,14 @@ function renderRadarChart() {
   if (!canvas || !assessmentState.results) return;
   
   const r = assessmentState.results;
-  const labels = NEUROTYPE_ORDER.map(id => {
+  // Only show ND profiles on radar (neurotypical is shown separately as baseline)
+  const ndOrder = NEUROTYPE_ORDER.filter(id => id !== 'neurotypical');
+  const labels = ndOrder.map(id => {
     let name = NEUROTYPES[id].name;
     return name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
   });
-  const data = NEUROTYPE_ORDER.map(id => r.normalized[id]);
-  const colors = NEUROTYPE_ORDER.map(id => NEUROTYPES[id].color);
+  const data = ndOrder.map(id => r.normalized[id]);
+  const colors = ndOrder.map(id => NEUROTYPES[id].color);
 
   new Chart(canvas, {
     type: 'radar',
