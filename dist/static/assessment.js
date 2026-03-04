@@ -239,17 +239,9 @@ function calculateAssessmentResults(answers) {
     normalized[nt] = Math.max(0, Math.min(100, Math.round(rawNormalized[nt] * dampening)));
   });
 
-  // ─── STEP 6: Compute Neurotypical Baseline ───
+  // ─── STEP 6: Summary Statistics ───
   const ndScores = ND_PROFILES.map(nt => normalized[nt]);
-  const avgNdScore = ndScores.reduce((a, b) => a + b, 0) / ndScores.length;
   const maxNdScore = Math.max(...ndScores);
-  
-  // NT baseline: inverse of ND trait endorsement
-  // Weighting: 40% average, 60% max ND score
-  const ntBaseline = Math.max(0, Math.min(100, Math.round(
-    100 - (avgNdScore * 0.4 + maxNdScore * 0.6)
-  )));
-  normalized['neurotypical'] = ntBaseline;
 
   // ─── STEP 7: Sort and Classify ───
   const sortedNd = ND_PROFILES
@@ -259,9 +251,11 @@ function calculateAssessmentResults(answers) {
   const topScore = sortedNd[0].score;
   const significantProfiles = sortedNd.filter(p => p.score >= 30);
   
+  // Profile summary — no longer classifies as 'neurotypical-predominant'
+  // If no profile reaches 30%, a note will be shown that the person likely has a neurotypical brain
   let profileSummary;
   if (topScore < 30) {
-    profileSummary = 'neurotypical-predominant';
+    profileSummary = 'low-alignment';
   } else if (topScore < 45) {
     profileSummary = 'mild-traits';
   } else if (significantProfiles.length >= 3 && significantProfiles[2].score >= 45) {
@@ -281,7 +275,6 @@ function calculateAssessmentResults(answers) {
     normalized,
     sorted: sortedNd,
     raw: scores,
-    ntBaseline,
     topScore,
     significantProfiles,
     profileSummary,

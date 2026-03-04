@@ -372,57 +372,23 @@ function finishAssessment() {
 function renderAssessmentResults() {
   const r = assessmentState.results;
   const top3 = r.sorted.filter(t => t.score > 0).slice(0, 3);
-  const ntBaseline = r.ntBaseline;
   const topScore = r.topScore;
   const significant = r.significantProfiles;
   const summary = r.profileSummary;
   const flatResponse = r.flatResponseDetected;
+  const lowAlignment = summary === 'low-alignment'; // no profile reached 30%
 
   // ─── AuDHD Detection ───
-  // Check if BOTH an ADHD-spectrum profile AND an ASD-spectrum profile are elevated
   const adhdIds = ['adhd-c', 'adhd-i', 'overfocused', 'temporal', 'limbic', 'ringoffire', 'anxious', 'adhd-dyslexia'];
   const asdIds = ['asd-1', 'asd-2', 'asd-3'];
   const adhdScores = significant.filter(p => adhdIds.includes(p.id));
   const asdScores = significant.filter(p => asdIds.includes(p.id));
   const topAdhd = adhdScores.length > 0 ? adhdScores[0] : null;
   const topAsd = asdScores.length > 0 ? asdScores[0] : null;
-  // Show AuDHD note if both an ADHD-type and ASD-type score ≥ 40%, and the person didn't already score highest on AuDHD
   const showAudhdNote = topAdhd && topAsd && topAdhd.score >= 40 && topAsd.score >= 40
     && !(top3[0] && top3[0].id === 'audhd');
 
-  // Build the neurotypical baseline section
-  const ntColor = NEUROTYPES.neurotypical.color;
-  let ntInterpretation = '';
-  if (summary === 'neurotypical-predominant') {
-    ntInterpretation = `<div class="bg-gradient-to-r from-mid-navy/80 to-light-navy/40 border-2 rounded-2xl p-6 mb-8" style="border-color:${ntColor}">
-      <div class="flex items-center gap-4 mb-4">
-        <img src="${NEUROTYPES.neurotypical.icon}" alt="Neurotypical" class="w-14 h-14 rounded-full border-2" style="border-color:${ntColor}">
-        <div>
-          <h3 class="font-display font-bold text-xl text-warm-white">Predominantly Neurotypical Profile</h3>
-          <p class="text-steel-blue text-sm">Neurotypical Baseline: <span class="font-bold" style="color:${ntColor}">${ntBaseline}%</span></p>
-        </div>
-      </div>
-      <p class="text-steel-blue leading-relaxed mb-3">Your responses suggest your brain operates predominantly within neurotypical patterns. No neurodivergent profile reached significant alignment (all below 30%).</p>
-      <p class="text-steel-blue leading-relaxed mb-3">This means your attention regulation, sensory processing, executive function, social communication, emotional regulation, and reading/language processing all fall within the range that most social institutions and relationships were designed around.</p>
-      <p class="text-steel-blue leading-relaxed"><strong class="text-warm-white">This is not a limitation.</strong> Understanding neurotypicality is itself valuable — particularly for building empathy with neurodivergent people in your life. Consider reading the <a onclick="navigateTo('profiles','neurotypical')" class="text-electric-teal hover:underline cursor-pointer">Neurotypical profile</a> to understand your brain's own blind spots and strengths.</p>
-    </div>`;
-  } else {
-    ntInterpretation = `<div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-5 mb-8">
-      <div class="flex items-center justify-between mb-2">
-        <div class="flex items-center gap-3">
-          <img src="${NEUROTYPES.neurotypical.icon}" alt="Neurotypical" class="w-8 h-8 rounded-full border-2" style="border-color:${ntColor}">
-          <h4 class="font-display font-medium text-warm-white">Neurotypical Baseline</h4>
-        </div>
-        <span class="font-display font-bold text-lg" style="color:${ntColor}">${ntBaseline}%</span>
-      </div>
-      <div class="h-2 bg-light-navy rounded-full overflow-hidden mb-3">
-        <div class="h-full rounded-full" style="width:${ntBaseline}%;background:${ntColor}"></div>
-      </div>
-      <p class="text-steel-blue text-xs leading-relaxed">This reflects the proportion of your cognitive profile that aligns with neurotypical patterns — the complement of your neurodivergent trait endorsement. A lower baseline means stronger ND trait presence; a higher baseline means more of your processing falls within typical ranges.</p>
-    </div>`;
-  }
-
-  // Build significance indicators for top results
+  // Build top results cards
   const topResultsHtml = top3.length > 0 ? top3.map((t, i) => {
     const tier = getTier(t.score);
     return `
@@ -444,11 +410,7 @@ function renderAssessmentResults() {
           </div>
         </div>
       </div>`;
-  }).join('') : `
-    <div class="bg-mid-navy/40 border border-light-navy/30 rounded-xl p-6 text-center">
-      <i class="fas fa-check-circle text-2xl text-soft-green mb-3"></i>
-      <p class="text-steel-blue">No neurodivergent profiles reached significant alignment. Your results suggest a predominantly neurotypical cognitive profile.</p>
-    </div>`;
+  }).join('') : '';
 
   return `
   <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -456,9 +418,6 @@ function renderAssessmentResults() {
       <h2 class="font-display font-bold text-2xl text-warm-white">Your Brain Profile</h2>
       <button onclick="resetAssessment()" class="text-steel-blue hover:text-warm-white text-sm"><i class="fas fa-redo mr-1"></i>Retake</button>
     </div>
-
-    <!-- Neurotypical Baseline -->
-    ${ntInterpretation}
 
     <!-- Radar Chart -->
     <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6 mb-8">
@@ -468,7 +427,7 @@ function renderAssessmentResults() {
       </div>
     </div>
 
-    ${summary !== 'neurotypical-predominant' ? `
+    ${topResultsHtml ? `
     <!-- Top Results -->
     <div class="mb-8">
       <h3 class="font-display font-semibold text-lg text-warm-white mb-4">Your Strongest Alignments</h3>
@@ -533,13 +492,40 @@ function renderAssessmentResults() {
         <details class="text-xs text-steel-blue/50">
           <summary class="cursor-pointer hover:text-steel-blue">Scoring Details</summary>
           <div class="mt-2 space-y-1">
-            <p>Response Differentiation: ${r.diffIndex}% — ${r.diffIndex < 25 ? 'Low (answers on NT-strength and ND-trait questions were similar)' : r.diffIndex < 50 ? 'Moderate' : 'Good (clear discrimination between NT-strength and ND-trait items)'}</p>
+            <p>Response Differentiation: ${r.diffIndex}% \u2014 ${r.diffIndex < 25 ? 'Low (answers on NT-strength and ND-trait questions were similar)' : r.diffIndex < 50 ? 'Moderate' : 'Good (clear discrimination between NT-strength and ND-trait items)'}</p>
             <p>Score Confidence: ${r.dampening}%</p>
-            ${r.flatResponseDetected ? '<p class="text-warm-amber/60">⚠ Flat response pattern detected — scores adjusted</p>' : ''}
+            ${r.flatResponseDetected ? '<p class="text-warm-amber/60">\u26A0 Flat response pattern detected \u2014 scores adjusted</p>' : ''}
           </div>
         </details>
       </div>` : ''}
     </div>
+
+    ${lowAlignment ? `
+    <!-- Likely Neurotypical Note -->
+    <div class="bg-gradient-to-r from-mid-navy/80 to-light-navy/40 border-2 rounded-2xl p-6 mb-8" style="border-color:${NEUROTYPES.neurotypical.color}">
+      <div class="flex items-start gap-4">
+        <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center" style="background:${NEUROTYPES.neurotypical.color}25">
+          <i class="fas fa-brain text-xl" style="color:${NEUROTYPES.neurotypical.color}"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-display font-bold text-lg text-warm-white mb-2">
+            <i class="fas fa-info-circle mr-2" style="color:${NEUROTYPES.neurotypical.color}"></i>You Likely Have a Neurotypical Brain
+          </h4>
+          <p class="text-steel-blue text-sm leading-relaxed mb-3">
+            None of your neurodivergent profile scores reached 30% \u2014 the threshold for meaningful alignment. Your highest score was <strong class="text-warm-white">${topScore}%</strong>. When no profile crosses this threshold, it typically means your attention, sensory processing, executive function, social communication, emotional regulation, and reading/language processing all operate within neurotypical ranges.
+          </p>
+          <p class="text-steel-blue text-sm leading-relaxed mb-3">
+            <strong class="text-warm-white">This is not a limitation.</strong> Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. Your low scores suggest these traits do not significantly shape your daily cognitive experience.
+          </p>
+          <p class="text-steel-blue text-sm leading-relaxed mb-4">
+            Understanding neurotypicality is itself valuable \u2014 particularly for building empathy with neurodivergent people in your life. Consider reading the <a onclick="navigateTo('profiles','neurotypical')" class="text-electric-teal hover:underline cursor-pointer font-semibold">Neurotypical profile</a> to understand your brain's own patterns, blind spots, and strengths.
+          </p>
+          <button onclick="navigateTo('profiles','neurotypical')" class="px-5 py-2.5 rounded-lg font-display font-semibold text-sm transition-all hover:scale-105" style="background:${NEUROTYPES.neurotypical.color};color:#0A1628">
+            <i class="fas fa-brain mr-1.5"></i>Read the Neurotypical Profile
+          </button>
+        </div>
+      </div>
+    </div>` : ''}
 
     ${flatResponse ? `
     <!-- Flat Response Warning -->
@@ -549,7 +535,7 @@ function renderAssessmentResults() {
         <div>
           <h4 class="font-display font-semibold text-warm-amber mb-2">Response Pattern Notice</h4>
           <p class="text-steel-blue text-sm leading-relaxed mb-2">Our scoring detected that your answers to questions describing <strong class="text-warm-white">neurotypical strengths</strong> (like sustaining attention on routine tasks, filtering background noise, and managing emotions smoothly) were similar to your answers on <strong class="text-warm-white">neurodivergent trait</strong> questions.</p>
-          <p class="text-steel-blue text-sm leading-relaxed">This pattern — sometimes called <em>acquiescence bias</em> — can occur when answering quickly or when questions feel ambiguous. Your scores have been adjusted to account for this. For the most accurate results, consider retaking the test and paying close attention to the 6 reverse-worded questions that describe things that come <em>easily</em> to you.</p>
+          <p class="text-steel-blue text-sm leading-relaxed">This pattern \u2014 sometimes called <em>acquiescence bias</em> \u2014 can occur when answering quickly or when questions feel ambiguous. Your scores have been adjusted to account for this. For the most accurate results, consider retaking the test and paying close attention to the 6 reverse-worded questions that describe things that come <em>easily</em> to you.</p>
         </div>
       </div>
     </div>` : ''}
@@ -558,12 +544,12 @@ function renderAssessmentResults() {
     <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6 mb-8">
       <h3 class="font-display font-semibold text-warm-white mb-4"><i class="fas fa-info-circle text-electric-teal mr-2"></i>Understanding Your Results</h3>
       <div class="space-y-3 text-steel-blue text-sm leading-relaxed">
-        ${summary === 'neurotypical-predominant' ? `
-          <p>Your results suggest a <strong class="text-warm-white">predominantly neurotypical cognitive profile</strong>. None of the 13 neurodivergent profiles reached significant alignment (all below 30%). This is a valid and meaningful result.</p>
-          <p>Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. Your low scores suggest these traits do not significantly shape your daily cognitive experience.</p>
-        ` : summary === 'mild-traits' ? `
+        ${summary === 'mild-traits' ? `
           <p>Your results show <strong class="text-warm-white">mild trait alignment</strong> across some neurodivergent profiles. Your highest score of ${topScore}% suggests some resonance with ${top3[0].name} patterns, but below the threshold typically associated with significant functional impact.</p>
           <p>Mild alignment may reflect subclinical traits, situational stress, or normal human variation. These patterns are worth understanding but may not require clinical attention unless they cause meaningful difficulty in daily life.</p>
+        ` : summary === 'low-alignment' ? `
+          <p>Your scores across all 13 neurodivergent profiles were below 30%, which falls in the <strong class="text-warm-white">"No Significant Alignment"</strong> range. This is a valid and informative result.</p>
+          <p>Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. Your scores suggest these traits do not significantly shape your daily cognitive experience, which is characteristic of a neurotypical brain.</p>
         ` : `
           <p>Your results show <strong class="text-warm-white">notable trait alignment</strong> with neurodivergent profiles. This is not a diagnosis \u2014 it's a pattern recognition tool that maps your self-reported experience against research-informed profiles.</p>
           <p>Your strongest alignment with <strong class="text-warm-white">${top3[0].name}</strong> (${top3[0].score}%) suggests you may relate most to this brain profile's patterns.</p>
@@ -576,13 +562,13 @@ function renderAssessmentResults() {
 
     <!-- Actions -->
     <div class="flex flex-wrap gap-4 justify-center">
-      ${summary === 'neurotypical-predominant' ? `
-        <button onclick="navigateTo('profiles','neurotypical')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
-          <i class="fas fa-brain mr-2"></i>Read Neurotypical Profile
-        </button>
-      ` : `
+      ${top3.length > 0 ? `
         <button onclick="navigateTo('profiles','${top3[0].id}')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
           <i class="fas fa-brain mr-2"></i>Read ${top3[0].name} Profile
+        </button>
+      ` : `
+        <button onclick="navigateTo('profiles','neurotypical')" class="px-6 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all">
+          <i class="fas fa-brain mr-2"></i>Explore Neurotype Profiles
         </button>
       `}
       <button onclick="navigateTo('explorer')" class="px-6 py-3 border-2 border-muted-purple text-muted-purple font-display font-semibold rounded-lg hover:bg-muted-purple/10 transition-all">
