@@ -36,6 +36,13 @@ function generateDynamicPairing(a, b) {
   if (aTraits.needsRoutine !== bTraits.needsRoutine) friction.push({ title: 'Routine vs. Spontaneity', desc: `One brain craves predictability while the other seeks novelty. This creates a fundamental tension around scheduling, planning, and daily life that requires conscious negotiation.`, fromA: `"I need to know what's coming. Surprises aren't fun for me — they're destabilizing."`, fromB: `"I need variety and flexibility. Rigid schedules make me feel trapped and suffocated."` });
   if (aTraits.processing !== bTraits.processing) friction.push({ title: 'Processing Speed Mismatch', desc: `These brains process information at different speeds and in different ways. One may need time to think; the other may think out loud. This creates misunderstandings around "why can't you just decide?" or "why won't you let me finish thinking?"`, fromA: `"When I go quiet, I'm not ignoring you — I'm processing. Please give me space to think."`, fromB: `"When I talk things through, I'm not expecting you to solve it — I'm thinking out loud."` });
   if (aTraits.sensoryNeeds !== bTraits.sensoryNeeds) friction.push({ title: 'Sensory Environment Conflict', desc: `These brains have different sensory needs. Volume, lighting, temperature, and physical space preferences may clash. One person's comfort zone is the other's discomfort zone.`, fromA: `"The environment isn't a preference — it's a need. When it's wrong, I can't function."`, fromB: `"I'm not being difficult — my brain genuinely needs different sensory input to feel okay."` });
+  if (aTraits.rigidity && bTraits.rigidity) friction.push({ title: 'Double Rigidity Lock', desc: `Both brains have difficulty with cognitive flexibility. When disagreements arise, neither can easily "give" — creating standoffs that escalate not from malice but from neurological inflexibility.`, fromA: `"I can't just 'let it go' — my brain won't release this position until it feels resolved."`, fromB: `"I hear you, but my brain is also locked. We need a structured process to find middle ground."` });
+  if (aTraits.moodVolatility || bTraits.moodVolatility) {
+    if (aTraits.moodVolatility !== bTraits.moodVolatility) friction.push({ title: 'Mood Volatility vs. Stability', desc: `One brain experiences rapid, intense mood shifts while the other operates on a more predictable emotional baseline. The volatile partner feels misunderstood; the stable partner feels destabilized.`, fromA: `"My moods are not a choice. They sweep through me like weather — real but temporary."`, fromB: `"I want to support you, but the unpredictability makes it hard to know which version of 'us' I'm walking into."` });
+  }
+  if (aTraits.anxietyDriven || bTraits.anxietyDriven) {
+    if (aTraits.anxietyDriven !== bTraits.anxietyDriven) friction.push({ title: 'Anxiety-Driven Avoidance', desc: `One brain's anxiety creates avoidance patterns — declining invitations, delaying decisions, avoiding conflict. The other partner may interpret this as disinterest rather than fear.`, fromA: `"When I avoid things, it's not because I don't care — it's because the fear is louder than the motivation."`, fromB: `"I need to understand that your hesitation is anxiety, not rejection. Help me see the difference."` });
+  }
   if (!friction.length) friction.push({ title: 'Shared Blind Spots', desc: `When two similar brains pair together, the areas both struggle with can become amplified. Neither partner compensates for the other's challenges, which means both need to actively build external support systems.`, fromA: `"We understand each other deeply, but we also share the same blind spots."`, fromB: `"We need to build systems together because neither of us naturally covers the other's gaps."` });
   
   // Bridges
@@ -48,21 +55,58 @@ function generateDynamicPairing(a, b) {
     overview: `When a ${a.name} brain meets a ${b.name} brain, the dynamic is shaped by fundamentally different neurological architectures. Understanding these differences transforms frustration into compassion and conflict into connection.`,
     harmony, friction, bridges,
     envDesign: `Create shared spaces with flexibility: zones for quiet focus and zones for stimulation. Use visual systems (shared calendars, whiteboards) rather than relying on verbal agreements that one brain may not retain. Designate a "reset space" each partner can retreat to without it meaning rejection.`,
-    needToKnowA: `"My brain isn't choosing to frustrate you. The things that seem easy for you — ${a.id.includes('adhd') ? 'focusing on boring tasks, being on time, remembering details' : a.id.includes('asd') ? 'reading social cues, handling surprises, filtering sensory input' : 'processing text quickly, avoiding errors in reading'} — are genuinely hard for my neurology. When you see me struggling, I need patience, not advice."`,
-    needToKnowB: `"My brain isn't choosing to frustrate you. The things that seem easy for you — ${b.id.includes('adhd') ? 'focusing on boring tasks, being on time, remembering details' : b.id.includes('asd') ? 'reading social cues, handling surprises, filtering sensory input' : 'maintaining consistent routines, processing text, filtering noise'} — are genuinely hard for my neurology. When you see me struggling, I need patience, not advice."`
+    needToKnowA: `"My brain isn't choosing to frustrate you. The things that seem easy for you — ${getStruggleDescription(a.id)} — are genuinely hard for my neurology. When you see me struggling, I need patience, not advice."`,
+    needToKnowB: `"My brain isn't choosing to frustrate you. The things that seem easy for you — ${getStruggleDescription(b.id)} — are genuinely hard for my neurology. When you see me struggling, I need patience, not advice."`
   };
 }
 
 function getTraitProfile(id) {
   const traits = {
-    masking: ['adhd-i', 'adhd-dyslexia', 'asd-1', 'asd-2', 'audhd'].includes(id),
-    intensity: ['adhd-c', 'adhd-i', 'asd-1', 'audhd'].includes(id),
-    creative: ['adhd-c', 'adhd-i', 'adhd-dyslexia', 'audhd', 'dyslexia'].includes(id),
-    needsRoutine: ['asd-1', 'asd-2', 'asd-3', 'neurotypical'].includes(id),
-    processing: id.includes('adhd') || id === 'audhd' ? 'fast-impulsive' : (id.includes('asd') ? 'slow-deliberate' : (id === 'dyslexia' ? 'slow-accurate' : 'balanced')),
-    sensoryNeeds: ['asd-1', 'asd-2', 'asd-3', 'audhd'].includes(id) ? 'high' : (['adhd-c', 'adhd-dyslexia'].includes(id) ? 'seeking' : 'moderate')
+    masking: ['adhd-i', 'adhd-dyslexia', 'asd-1', 'asd-2', 'audhd', 'anxious', 'limbic'].includes(id),
+    intensity: ['adhd-c', 'adhd-i', 'asd-1', 'audhd', 'ringoffire', 'temporal'].includes(id),
+    creative: ['adhd-c', 'adhd-i', 'adhd-dyslexia', 'audhd', 'dyslexia', 'ringoffire'].includes(id),
+    needsRoutine: ['asd-1', 'asd-2', 'asd-3', 'neurotypical', 'overfocused'].includes(id),
+    processing: (() => {
+      if (['adhd-c', 'adhd-i', 'adhd-dyslexia', 'audhd', 'ringoffire'].includes(id)) return 'fast-impulsive';
+      if (['asd-1', 'asd-2', 'asd-3'].includes(id)) return 'slow-deliberate';
+      if (id === 'dyslexia') return 'slow-accurate';
+      if (id === 'overfocused') return 'rigid-locked';
+      if (id === 'temporal') return 'volatile-unpredictable';
+      if (id === 'limbic') return 'low-energy-drift';
+      if (id === 'anxious') return 'worry-fragmented';
+      return 'balanced';
+    })(),
+    sensoryNeeds: (() => {
+      if (['asd-1', 'asd-2', 'asd-3', 'audhd', 'ringoffire'].includes(id)) return 'high';
+      if (['adhd-c', 'adhd-dyslexia'].includes(id)) return 'seeking';
+      if (id === 'temporal') return 'volatile';
+      if (id === 'anxious') return 'vigilant';
+      return 'moderate';
+    })(),
+    rigidity: ['overfocused', 'asd-1', 'asd-2', 'asd-3'].includes(id),
+    moodVolatility: ['temporal', 'ringoffire', 'limbic'].includes(id),
+    anxietyDriven: ['anxious', 'limbic'].includes(id)
   };
   return traits;
+}
+
+function getStruggleDescription(id) {
+  switch(id) {
+    case 'adhd-c': return 'focusing on boring tasks, being on time, controlling impulses';
+    case 'adhd-i': return 'starting tasks, sustaining attention, remembering details';
+    case 'overfocused': return 'letting go of thoughts, shifting gears, adapting to change';
+    case 'temporal': return 'controlling emotional explosions, processing auditory information, stabilizing mood';
+    case 'limbic': return 'finding motivation, sustaining energy, seeing past the fog of low mood';
+    case 'ringoffire': return 'filtering sensory input, moderating emotional intensity, slowing racing thoughts';
+    case 'anxious': return 'starting tasks without fear, quieting worry, performing under evaluation';
+    case 'adhd-dyslexia': return 'sustaining attention AND processing text accurately at the same time';
+    case 'dyslexia': return 'processing text quickly, avoiding reading errors, spelling';
+    case 'asd-1': return 'reading social cues, handling surprises, filtering sensory input';
+    case 'asd-2': return 'communicating needs, managing sensory overload, adapting to change';
+    case 'asd-3': return 'expressing myself through speech, managing sensory environments, coping with routine changes';
+    case 'audhd': return 'managing two conflicting neurological systems — needing routine AND novelty simultaneously';
+    default: return 'maintaining consistent routines, processing text, filtering noise';
+  }
 }
 
 // Priority pairing data with rich content

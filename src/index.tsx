@@ -55,6 +55,11 @@ function getMainHTML(): string {
             'nt-asd2': '#22D3EE',
             'nt-asd3': '#818CF8',
             'nt-audhd': '#EC4899',
+            'nt-overfocused': '#E11D48',
+            'nt-temporal': '#DC2626',
+            'nt-limbic': '#4338CA',
+            'nt-ringoffire': '#EF4444',
+            'nt-anxious': '#7C3AED',
           },
           fontFamily: {
             display: ['Space Grotesk', 'sans-serif'],

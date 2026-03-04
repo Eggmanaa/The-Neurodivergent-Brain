@@ -1,6 +1,7 @@
 // ============================================================
 // THE NEURODIVERGENT BRAIN — Main Application Controller
 // SPA Navigation, Rendering, State Management
+// Updated: 14 neurotype profiles with grouped tabs
 // ============================================================
 
 let currentSection = 'home';
@@ -43,7 +44,7 @@ function renderHome() {
         "Every brain is wired differently. Understanding yours changes everything."
       </p>
       <p class="text-steel-blue/80 text-lg max-w-2xl mx-auto mb-10">
-        Research-informed profiles of how different brains work. Not a diagnosis — a starting point for understanding.
+        Research-informed profiles of how different brains work — including DSM-5 classifications and Dr. Daniel Amen's 7 ADD subtypes. Not a diagnosis — a starting point for understanding.
       </p>
       <div class="flex flex-wrap justify-center gap-4">
         <button onclick="navigateTo('profiles')" class="px-8 py-3 bg-electric-teal text-deep-navy font-display font-semibold rounded-lg hover:bg-electric-teal/90 transition-all transform hover:scale-105">
@@ -65,7 +66,7 @@ function renderHome() {
           <i class="fas fa-fingerprint text-2xl text-electric-teal"></i>
         </div>
         <h3 class="font-display font-semibold text-xl text-warm-white mb-3">The Neurotypes</h3>
-        <p class="text-steel-blue text-sm leading-relaxed">9 research-informed profiles covering Neurotypical, ADHD, Dyslexia, Autism, and AuDHD. Each includes 18 clinical dimensions from prevalence to hidden strengths.</p>
+        <p class="text-steel-blue text-sm leading-relaxed">14 research-informed profiles covering Neurotypical, 7 ADD subtypes (Dr. Amen), Dyslexia, Autism Levels 1–3, and AuDHD. Each profile includes clinical dimensions from prevalence to hidden strengths.</p>
         <div class="flex flex-wrap gap-1.5 mt-4">
           ${NEUROTYPE_ORDER.map(id => `<span class="w-3 h-3 rounded-full" style="background:${NEUROTYPES[id].color}"></span>`).join('')}
         </div>
@@ -75,7 +76,7 @@ function renderHome() {
           <i class="fas fa-compass text-2xl text-warm-amber"></i>
         </div>
         <h3 class="font-display font-semibold text-xl text-warm-white mb-3">Discover Your Brain</h3>
-        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains. Not a diagnosis — a research-informed reflection tool that shows your brain profile spectrum.</p>
+        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — now scoring against all 14 neurotype profiles. Not a diagnosis — a research-informed reflection tool.</p>
         <div class="mt-4 text-xs text-steel-blue/60">
           <i class="fas fa-lock mr-1"></i> Privacy-first: all data stays in your browser
         </div>
@@ -96,7 +97,7 @@ function renderHome() {
       <h3 class="font-display font-semibold text-xl text-warm-white mb-3">Important Disclaimer</h3>
       <p class="text-steel-blue leading-relaxed max-w-2xl mx-auto">
         This website is an <strong class="text-warm-white">educational tool</strong>, not a clinical assessment. 
-        The profiles and self-screening tool are informed by peer-reviewed research but are not a substitute 
+        The profiles and self-screening tool are informed by peer-reviewed research and Dr. Daniel Amen's SPECT imaging research but are not a substitute 
         for professional evaluation. If you recognize yourself in these profiles, consider seeking a qualified 
         clinician who specializes in adult neurodevelopmental assessment.
       </p>
@@ -110,19 +111,27 @@ function renderProfiles() {
   return `
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-2">The Neurotypes</h2>
-    <p class="text-steel-blue mb-8">Research-informed profiles of how different brains work in adults.</p>
+    <p class="text-steel-blue mb-6">Research-informed profiles of how different brains work in adults.</p>
     
-    <!-- Neurotype Tabs -->
-    <div class="neurotype-tabs-scroll mb-8">
-      <div class="flex gap-2 pb-2 min-w-max">
-        ${NEUROTYPE_ORDER.map(id => {
-          const n = NEUROTYPES[id];
-          return `<button onclick="selectProfile('${id}')" class="neurotype-tab flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${currentProfile === id ? 'active bg-light-navy/60 text-warm-white' : 'text-steel-blue hover:text-warm-white hover:bg-light-navy/30'}" style="${currentProfile === id ? 'border-bottom: 2px solid '+n.color : ''}">
-            <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:${n.color}"></span>
-            <span class="whitespace-nowrap">${n.name}</span>
-          </button>`;
-        }).join('')}
-      </div>
+    <!-- Grouped Neurotype Tabs -->
+    <div class="mb-8 space-y-3">
+      ${Object.entries(NEUROTYPE_GROUPS).map(([group, ids]) => `
+        <div>
+          <div class="text-xs text-steel-blue/60 uppercase tracking-wider font-medium mb-1.5 pl-1">${group}</div>
+          <div class="neurotype-tabs-scroll">
+            <div class="flex gap-1.5 pb-1 min-w-max">
+              ${ids.map(id => {
+                const n = NEUROTYPES[id];
+                const shortName = n.name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
+                return `<button onclick="selectProfile('${id}')" class="neurotype-tab flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${currentProfile === id ? 'active bg-light-navy/60 text-warm-white ring-1' : 'text-steel-blue hover:text-warm-white hover:bg-light-navy/30'}" style="${currentProfile === id ? 'ring-color:'+n.color+';border-bottom: 2px solid '+n.color : ''}">
+                  <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:${n.color}"></span>
+                  <span>${shortName}</span>
+                </button>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('')}
     </div>
 
     <!-- Profile Content -->
@@ -139,6 +148,13 @@ function renderProfiles() {
           </div>
         </div>
       </div>
+
+      ${nt.amenType ? `
+      <!-- Amen Brain Type -->
+      <div class="bg-gradient-to-r from-mid-navy/60 to-light-navy/30 border border-light-navy/50 rounded-2xl p-6 mb-8">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-3"><i class="fas fa-brain mr-2" style="color:${nt.color}"></i>Brain Imaging (Dr. Amen's SPECT Research)</h4>
+        <p class="text-steel-blue leading-relaxed text-sm">${nt.amenType}</p>
+      </div>` : ''}
 
       <!-- Core Challenge Highlight -->
       <div class="bg-mid-navy/60 border-l-4 rounded-r-xl p-6 mb-8" style="border-color:${nt.color}">
@@ -162,7 +178,7 @@ function renderProfiles() {
       <h4 class="font-display font-semibold text-xl text-warm-white mb-6">Detailed Profile</h4>
       <div class="grid md:grid-cols-2 gap-4">
         ${Object.entries(DIMENSION_LABELS).map(([key, dim]) => {
-          if (key === 'coreChallenge' || key === 'strength') return '';
+          if (key === 'coreChallenge' || key === 'strength' || key === 'amenType') return '';
           const val = nt[key];
           if (!val) return '';
           return `
@@ -276,7 +292,7 @@ function renderAssessmentIntro() {
         <i class="fas fa-compass text-3xl text-electric-teal"></i>
       </div>
       <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-4">Discover Your Brain</h2>
-      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Understand your brain profile — not as a diagnosis, but as a starting point.</p>
+      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Scoring against 14 neurotype profiles — including Dr. Amen's 7 ADD subtypes. Understand your brain profile — not as a diagnosis, but as a starting point.</p>
     </div>
 
     <div class="grid md:grid-cols-3 gap-4 mb-10">
@@ -310,14 +326,12 @@ function renderAssessmentIntro() {
 
 function startAssessment() {
   assessmentState = { currentQ: 0, answers: {}, completed: false, results: null };
-  assessmentState.currentQ = 0;
   document.getElementById('app').innerHTML = renderAssessment();
 }
 
 function answerQuestion(qId, value) {
   assessmentState.answers[qId] = value;
   localStorage.setItem('ndb_assessment', JSON.stringify({ answers: assessmentState.answers, currentQ: assessmentState.currentQ }));
-  // Auto-advance after short delay
   setTimeout(() => {
     if (assessmentState.currentQ < ASSESSMENT_QUESTIONS.length - 1) {
       assessmentState.currentQ++;
@@ -405,7 +419,7 @@ function renderAssessmentResults() {
         ${r.sorted.map(t => `
           <div class="flex items-center gap-3">
             <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:${t.color}"></span>
-            <span class="text-sm text-steel-blue w-40">${t.name}</span>
+            <span class="text-sm text-steel-blue w-44 flex-shrink-0">${t.name}</span>
             <div class="flex-1 h-2 bg-light-navy rounded-full overflow-hidden">
               <div class="h-full rounded-full" style="width:${t.score}%;background:${t.color}"></div>
             </div>
@@ -449,24 +463,26 @@ function renderExplorer() {
     <div class="grid md:grid-cols-2 gap-8 mb-8">
       <div>
         <h3 class="font-display font-semibold text-warm-white mb-3"><span class="text-electric-teal">Brain A</span> — Select a neurotype</h3>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
           ${NEUROTYPE_ORDER.map(id => {
             const n = NEUROTYPES[id];
-            return `<button onclick="selectBrainA('${id}')" class="brain-selector rounded-xl p-3 text-center bg-mid-navy/60 border border-light-navy/50 ${explorerState.brainA === id ? 'selected' : ''}" style="${explorerState.brainA === id ? 'border-color:'+n.color+';box-shadow:0 0 0 2px '+n.color+'40' : ''}">
-              <img src="${n.icon}" alt="${n.name}" class="w-10 h-10 rounded-full mx-auto mb-1.5 border-2" style="border-color:${n.color}">
-              <span class="text-xs font-medium" style="color:${explorerState.brainA === id ? n.color : '#A0B4C8'}">${n.name.replace('ADHD — ','').replace('ASD — ','')}</span>
+            const shortName = n.name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
+            return `<button onclick="selectBrainA('${id}')" class="brain-selector rounded-xl p-2 text-center bg-mid-navy/60 border border-light-navy/50 ${explorerState.brainA === id ? 'selected' : ''}" style="${explorerState.brainA === id ? 'border-color:'+n.color+';box-shadow:0 0 0 2px '+n.color+'40' : ''}">
+              <img src="${n.icon}" alt="${n.name}" class="w-8 h-8 rounded-full mx-auto mb-1 border-2" style="border-color:${n.color}">
+              <span class="text-[10px] leading-tight font-medium block" style="color:${explorerState.brainA === id ? n.color : '#A0B4C8'}">${shortName}</span>
             </button>`;
           }).join('')}
         </div>
       </div>
       <div>
         <h3 class="font-display font-semibold text-warm-white mb-3"><span class="text-muted-purple">Brain B</span> — Select a neurotype</h3>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
           ${NEUROTYPE_ORDER.map(id => {
             const n = NEUROTYPES[id];
-            return `<button onclick="selectBrainB('${id}')" class="brain-selector rounded-xl p-3 text-center bg-mid-navy/60 border border-light-navy/50 ${explorerState.brainB === id ? 'selected' : ''}" style="${explorerState.brainB === id ? 'border-color:'+n.color+';box-shadow:0 0 0 2px '+n.color+'40' : ''}">
-              <img src="${n.icon}" alt="${n.name}" class="w-10 h-10 rounded-full mx-auto mb-1.5 border-2" style="border-color:${n.color}">
-              <span class="text-xs font-medium" style="color:${explorerState.brainB === id ? n.color : '#A0B4C8'}">${n.name.replace('ADHD — ','').replace('ASD — ','')}</span>
+            const shortName = n.name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
+            return `<button onclick="selectBrainB('${id}')" class="brain-selector rounded-xl p-2 text-center bg-mid-navy/60 border border-light-navy/50 ${explorerState.brainB === id ? 'selected' : ''}" style="${explorerState.brainB === id ? 'border-color:'+n.color+';box-shadow:0 0 0 2px '+n.color+'40' : ''}">
+              <img src="${n.icon}" alt="${n.name}" class="w-8 h-8 rounded-full mx-auto mb-1 border-2" style="border-color:${n.color}">
+              <span class="text-[10px] leading-tight font-medium block" style="color:${explorerState.brainB === id ? n.color : '#A0B4C8'}">${shortName}</span>
             </button>`;
           }).join('')}
         </div>
@@ -601,7 +617,7 @@ function renderAbout() {
     <div class="space-y-6 text-steel-blue leading-relaxed">
       <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6">
         <h3 class="font-display font-semibold text-warm-white mb-3"><i class="fas fa-bullseye text-electric-teal mr-2"></i>Purpose</h3>
-        <p>The Neurodivergent Brain is an educational resource designed to help adults understand neurodivergent brain profiles. It draws from peer-reviewed clinical research to present complex neuroscience in accessible, identity-affirming language.</p>
+        <p>The Neurodivergent Brain is an educational resource designed to help adults understand neurodivergent brain profiles. It draws from peer-reviewed clinical research and Dr. Daniel Amen's SPECT imaging work to present complex neuroscience in accessible, identity-affirming language.</p>
       </div>
 
       <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6">
@@ -610,12 +626,22 @@ function renderAbout() {
           <li><i class="fas fa-check text-electric-teal mr-2"></i>PMC/NIH peer-reviewed literature</li>
           <li><i class="fas fa-check text-electric-teal mr-2"></i>DSM-5-TR (Diagnostic and Statistical Manual)</li>
           <li><i class="fas fa-check text-electric-teal mr-2"></i>American Psychological Association (APA)</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>Dr. Daniel Amen — SPECT imaging, 7 ADD subtypes</li>
           <li><i class="fas fa-check text-electric-teal mr-2"></i>Barkley, R.A. (2015) — ADHD executive function research</li>
           <li><i class="fas fa-check text-electric-teal mr-2"></i>Willcutt et al. (2012) — ADHD/Dyslexia comorbidity</li>
-          <li><i class="fas fa-check text-electric-teal mr-2"></i>Weiss et al. (2014) — Adult ADHD presentation subtypes</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>Monotropism theory (Murray, Lesser & Lawson)</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>CAT-Q Camouflaging framework (Hull et al.)</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>RAADS-R adult autism assessment (Ritvo et al.)</li>
           <li><i class="fas fa-check text-electric-teal mr-2"></i>Rong et al. (2021) — AuDHD neurological distinctness</li>
-          <li><i class="fas fa-check text-electric-teal mr-2"></i>Pennington (2006) — Multiple deficit model</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>Interoception & Alexithymia research (Murphy et al.)</li>
+          <li><i class="fas fa-check text-electric-teal mr-2"></i>Autistic Burnout research (Raymaker et al., 2020)</li>
         </ul>
+      </div>
+
+      <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6">
+        <h3 class="font-display font-semibold text-warm-white mb-3"><i class="fas fa-brain text-warm-amber mr-2"></i>About Dr. Amen's 7 ADD Types</h3>
+        <p class="mb-3">Dr. Daniel Amen identified 7 distinct types of ADD based on SPECT (Single Photon Emission Computed Tomography) brain imaging, which measures blood flow and metabolic activity in the brain. Unlike the DSM-5's behavioral observation model, Amen's approach identifies neurophysiological subtypes that explain why the same medication doesn't work for all ADHD presentations.</p>
+        <p class="text-sm text-steel-blue/80">Note: While Amen's 7-type model is clinically influential, it is not universally endorsed by all professional organizations. The APA and some neuro-ethicists argue SPECT lacks diagnostic specificity. This site presents the model as one valuable lens alongside DSM-5 classifications.</p>
       </div>
 
       <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-6">
@@ -630,7 +656,7 @@ function renderAbout() {
 
       <div class="bg-warm-amber/10 border border-warm-amber/20 rounded-2xl p-6">
         <h3 class="font-display font-semibold text-warm-amber mb-3"><i class="fas fa-exclamation-triangle mr-2"></i>Clinical Disclaimer</h3>
-        <p>This website is an educational tool. It is not a clinical assessment and cannot provide a diagnosis. The self-screening tool is designed to facilitate self-reflection and conversation with qualified professionals — not to replace professional evaluation. If you recognize yourself in these profiles, seek a clinician who specializes in adult neurodevelopmental assessment.</p>
+        <p>This website is an educational tool. It is not a clinical assessment and cannot provide a diagnosis. The self-screening tool is designed to facilitate self-reflection and conversation with qualified professionals — not to replace professional evaluation.</p>
       </div>
     </div>
   </section>`;
@@ -642,7 +668,10 @@ function renderRadarChart() {
   if (!canvas || !assessmentState.results) return;
   
   const r = assessmentState.results;
-  const labels = NEUROTYPE_ORDER.map(id => NEUROTYPES[id].name.replace('ADHD — ','ADHD-').replace('ASD — ','ASD '));
+  const labels = NEUROTYPE_ORDER.map(id => {
+    let name = NEUROTYPES[id].name;
+    return name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
+  });
   const data = NEUROTYPE_ORDER.map(id => r.normalized[id]);
   const colors = NEUROTYPE_ORDER.map(id => NEUROTYPES[id].color);
 
@@ -658,8 +687,8 @@ function renderRadarChart() {
         borderWidth: 2,
         pointBackgroundColor: colors,
         pointBorderColor: colors,
-        pointRadius: 5,
-        pointHoverRadius: 7
+        pointRadius: 4,
+        pointHoverRadius: 6
       }]
     },
     options: {
@@ -674,13 +703,13 @@ function renderRadarChart() {
             stepSize: 25, 
             color: '#A0B4C8',
             backdropColor: 'transparent',
-            font: { size: 10 }
+            font: { size: 9 }
           },
           grid: { color: 'rgba(160, 180, 200, 0.15)' },
           angleLines: { color: 'rgba(160, 180, 200, 0.15)' },
           pointLabels: { 
             color: '#E8E6E1', 
-            font: { size: 11, family: 'Space Grotesk' }
+            font: { size: 9, family: 'Space Grotesk' }
           }
         }
       }
