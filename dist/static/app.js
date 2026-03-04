@@ -5,7 +5,7 @@
 // ============================================================
 
 let currentSection = 'home';
-let currentProfile = 'neurotypical';
+let currentProfile = 'adhd-c';
 let assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: false };
 let explorerState = { brainA: null, brainB: null, view: 'narrative' };
 
@@ -19,7 +19,7 @@ function navigateTo(section, sub) {
   const app = document.getElementById('app');
   switch(section) {
     case 'home': app.innerHTML = renderHome(); break;
-    case 'profiles': currentProfile = sub || currentProfile || 'neurotypical'; app.innerHTML = renderProfiles(); break;
+    case 'profiles': currentProfile = sub || currentProfile || 'adhd-c'; app.innerHTML = renderProfiles(); break;
     case 'assessment': app.innerHTML = renderAssessment(); break;
     case 'explorer': app.innerHTML = renderExplorer(); break;
     case 'about': app.innerHTML = renderAbout(); break;
@@ -76,7 +76,7 @@ function renderHome() {
           <i class="fas fa-compass text-2xl text-warm-amber"></i>
         </div>
         <h3 class="font-display font-semibold text-xl text-warm-white mb-3">Discover Your Brain</h3>
-        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — screening against 13 neurodivergent profiles. If your scores are low across the board, you'll receive a neurotypical baseline result. Not a diagnosis — a research-informed reflection tool.</p>
+        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — screening against 13 neurodivergent profiles. Not a diagnosis — a research-informed reflection tool.</p>
         <div class="mt-4 text-xs text-steel-blue/60">
           <i class="fas fa-lock mr-1"></i> Privacy-first: all data stays in your browser
         </div>
@@ -292,7 +292,7 @@ function renderAssessmentIntro() {
         <i class="fas fa-compass text-3xl text-electric-teal"></i>
       </div>
       <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-4">Discover Your Brain</h2>
-      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Screening against 13 neurodivergent profiles — including Dr. Amen's 7 ADD subtypes. If your scores are low across the board, your result will reflect a predominantly neurotypical cognitive profile. Not a diagnosis — a starting point for understanding.</p>
+      <p class="text-steel-blue text-lg max-w-xl mx-auto">A 60-question self-reflection tool across 6 cognitive domains. Screening against 13 neurodivergent profiles — including Dr. Amen's 7 ADD subtypes. Not a diagnosis — a starting point for understanding.</p>
     </div>
 
     <div class="grid md:grid-cols-3 gap-4 mb-10">
@@ -474,28 +474,22 @@ function renderAssessmentResults() {
     </div>
 
     ${lowAlignment ? `
-    <!-- Likely Neurotypical Note -->
-    <div class="bg-gradient-to-r from-mid-navy/80 to-light-navy/40 border-2 rounded-2xl p-6 mb-8" style="border-color:${NEUROTYPES.neurotypical.color}">
+    <!-- Low Alignment Note -->
+    <div class="bg-gradient-to-r from-mid-navy/80 to-light-navy/40 border-2 rounded-2xl p-6 mb-8" style="border-color:#8B9DAF">
       <div class="flex items-start gap-4">
-        <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center" style="background:${NEUROTYPES.neurotypical.color}25">
-          <i class="fas fa-brain text-xl" style="color:${NEUROTYPES.neurotypical.color}"></i>
+        <div class="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center" style="background:#8B9DAF25">
+          <i class="fas fa-brain text-xl" style="color:#8B9DAF"></i>
         </div>
         <div class="flex-1">
           <h4 class="font-display font-bold text-lg text-warm-white mb-2">
-            <i class="fas fa-info-circle mr-2" style="color:${NEUROTYPES.neurotypical.color}"></i>You Likely Have a Neurotypical Brain
+            <i class="fas fa-info-circle mr-2" style="color:#8B9DAF"></i>Low Alignment Across Neurodivergent Profiles
           </h4>
           <p class="text-steel-blue text-sm leading-relaxed mb-3">
-            None of your neurodivergent profile scores reached 30% \u2014 the threshold for meaningful alignment. Your highest score was <strong class="text-warm-white">${topNdScore}%</strong>. When no profile crosses this threshold, it typically means your attention, sensory processing, executive function, social communication, emotional regulation, and reading/language processing all operate within neurotypical ranges.
+            None of your neurodivergent profile scores reached 30% \u2014 the threshold for meaningful alignment. Your highest score was <strong class="text-warm-white">${topNdScore}%</strong>. When no profile crosses this threshold, it may suggest your traits do not significantly align with the profiles in this tool.
           </p>
           <p class="text-steel-blue text-sm leading-relaxed mb-3">
-            <strong class="text-warm-white">This is not a limitation.</strong> Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. Your low scores suggest these traits do not significantly shape your daily cognitive experience.
+            <strong class="text-warm-white">This is not a final answer.</strong> Everyone has some traits that overlap with neurodivergent profiles \u2014 the key is the <em>degree, consistency, and functional impact</em>. If you feel strongly that something doesn't fit, consider exploring these patterns with a qualified professional.
           </p>
-          <p class="text-steel-blue text-sm leading-relaxed mb-4">
-            Understanding neurotypicality is itself valuable \u2014 particularly for building empathy with neurodivergent people in your life. Consider reading the <a onclick="navigateTo('profiles','neurotypical')" class="text-electric-teal hover:underline cursor-pointer font-semibold">Neurotypical profile</a> to understand your brain's own patterns, blind spots, and strengths.
-          </p>
-          <button onclick="navigateTo('profiles','neurotypical')" class="px-5 py-2.5 rounded-lg font-display font-semibold text-sm transition-all hover:scale-105" style="background:${NEUROTYPES.neurotypical.color};color:#0A1628">
-            <i class="fas fa-brain mr-1.5"></i>Read the Neurotypical Profile
-          </button>
         </div>
       </div>
     </div>` : ''}
@@ -842,7 +836,7 @@ function renderRadarChart() {
   if (!canvas || !assessmentState.results) return;
   
   const r = assessmentState.results;
-  // Show all profiles on radar (including neurotypical, like v1)
+  // Show all neurodivergent profiles on radar (neurotypical excluded)
   const labels = NEUROTYPE_ORDER.map(id => {
     let name = NEUROTYPES[id].name;
     return name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');

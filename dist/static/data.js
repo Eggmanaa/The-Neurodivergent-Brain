@@ -409,9 +409,8 @@ const NEUROTYPES = {
 };
 
 // Ordered list of neurotype IDs for consistent display
-// Grouped: Neurotypical, then ADHD-spectrum (DSM + Amen), then Dyslexia, then ASD, then AuDHD
+// Grouped: ADHD-spectrum (DSM + Amen), then Dyslexia, then ASD, then AuDHD
 const NEUROTYPE_ORDER = [
-  'neurotypical',
   'adhd-c', 'adhd-i', 'overfocused', 'temporal', 'limbic', 'ringoffire', 'anxious',
   'adhd-dyslexia', 'dyslexia',
   'asd-1', 'asd-2', 'asd-3',
@@ -420,7 +419,6 @@ const NEUROTYPE_ORDER = [
 
 // Grouped categories for navigation tabs
 const NEUROTYPE_GROUPS = {
-  'General': ['neurotypical'],
   'ADHD Spectrum': ['adhd-c', 'adhd-i', 'overfocused', 'temporal', 'limbic', 'ringoffire', 'anxious'],
   'Reading & Language': ['adhd-dyslexia', 'dyslexia'],
   'Autism Spectrum': ['asd-1', 'asd-2', 'asd-3'],

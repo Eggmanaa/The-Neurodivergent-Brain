@@ -99,9 +99,7 @@ const LIKERT_OPTIONS = [
 // ============================================================
 // SCORING ENGINE — Original v1 Simple Weighted Scoring
 // Scores all profiles using NEUROTYPE_ORDER.
-// Neurotypical is included in the scoring but the results page
-// handles it separately — if all ND scores are low (<30%), a
-// note tells the user they likely have a neurotypical brain.
+// Neurotypical is excluded from scoring and results.
 // ============================================================
 
 function calculateAssessmentResults(answers) {
