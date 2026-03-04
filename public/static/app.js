@@ -6,7 +6,7 @@
 
 let currentSection = 'home';
 let currentProfile = 'neurotypical';
-let assessmentState = { currentQ: 0, answers: {}, completed: false, results: null };
+let assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: false };
 let explorerState = { brainA: null, brainB: null };
 
 // ==================== NAVIGATION ====================
@@ -218,7 +218,7 @@ function renderAssessment() {
   const progress = ((assessmentState.currentQ) / ASSESSMENT_QUESTIONS.length) * 100;
   const answered = Object.keys(assessmentState.answers).length;
 
-  if (assessmentState.currentQ === 0 && answered === 0) {
+  if (!assessmentState.started && assessmentState.currentQ === 0 && answered === 0) {
     return renderAssessmentIntro();
   }
 
@@ -325,7 +325,7 @@ function renderAssessmentIntro() {
 }
 
 function startAssessment() {
-  assessmentState = { currentQ: 0, answers: {}, completed: false, results: null };
+  assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: true };
   document.getElementById('app').innerHTML = renderAssessment();
 }
 
@@ -357,7 +357,7 @@ function prevQuestion() {
 }
 
 function resetAssessment() {
-  assessmentState = { currentQ: 0, answers: {}, completed: false, results: null };
+  assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: false };
   localStorage.removeItem('ndb_assessment');
   document.getElementById('app').innerHTML = renderAssessment();
 }
