@@ -154,10 +154,10 @@ function renderProfiles() {
             <h3 class="font-display font-bold text-2xl md:text-3xl text-warm-white mb-1">${nt.name}</h3>
             <p class="font-accent italic text-base text-steel-blue leading-relaxed mb-4">${nt.tagline}</p>
             <div class="flex flex-wrap gap-2">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium" style="background:${nt.color}18;color:${nt.color};border:1px solid ${nt.color}40">
-                <i class="fas fa-chart-bar text-xs"></i>${nt.prevalence.split('.')[0].substring(0, 60)}${nt.prevalence.split('.')[0].length > 60 ? '...' : ''}
+              <span class="inline-flex items-start gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium max-w-lg" style="background:${nt.color}18;color:${nt.color};border:1px solid ${nt.color}40">
+                <i class="fas fa-chart-bar text-xs mt-0.5 flex-shrink-0"></i><span>${nt.prevalence.split('.')[0]}.</span>
               </span>
-              ${nt.amenType ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-mid-navy/80 text-steel-blue border border-light-navy/50"><i class="fas fa-brain text-xs"></i>Amen Type Identified</span>` : ''}
+              ${nt.amenType ? `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-mid-navy/80 text-steel-blue border border-light-navy/50"><i class="fas fa-brain text-xs flex-shrink-0"></i>Amen Type Identified</span>` : ''}
             </div>
           </div>
         </div>
