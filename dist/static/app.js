@@ -21,7 +21,7 @@ function navigateTo(section, sub) {
   switch(section) {
     case 'home': app.innerHTML = renderHome(); break;
     case 'profiles': currentProfile = sub || currentProfile || 'adhd-c'; currentProfileTab = 'overview'; app.innerHTML = renderProfiles(); break;
-    case 'assessment': app.innerHTML = renderAssessment(); break;
+    case 'assessment': app.innerHTML = renderAssessmentV2(); break;
     case 'explorer': app.innerHTML = renderExplorer(); break;
     case 'about': app.innerHTML = renderAbout(); break;
   }
@@ -77,7 +77,7 @@ function renderHome() {
           <i class="fas fa-compass text-2xl text-warm-amber"></i>
         </div>
         <h3 class="font-display font-semibold text-xl text-warm-white mb-3">Discover Your Brain</h3>
-        <p class="text-steel-blue text-sm leading-relaxed">A 60-question self-assessment across 6 domains — screening against 13 neurodivergent profiles. Not a diagnosis — a research-informed reflection tool.</p>
+        <p class="text-steel-blue text-sm leading-relaxed">A 152-question self-assessment across 14 cognitive domains — screening against 14 neurotype profiles. Clinically-informed scoring with validity checks, confidence ratings, and a full radar fingerprint. Not a diagnosis — a research-informed reflection tool.</p>
         <div class="mt-4 text-xs text-steel-blue/60">
           <i class="fas fa-lock mr-1"></i> Privacy-first: all data stays in your browser
         </div>

@@ -122,8 +122,13 @@ function getMainHTML(): string {
 
   <script src="/static/data.js"></script>
   <script src="/static/assessment.js"></script>
+  <script src="/static/assessment-questions.js"></script>
+  <script src="/static/assessment-engine.js"></script>
+  <script src="/static/assessment-results.js"></script>
+  <script src="/static/assessment-ui.js"></script>
   <script src="/static/pairings.js"></script>
   <script src="/static/comparisons.js"></script>
+  <script src="/static/conflicts.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>`
