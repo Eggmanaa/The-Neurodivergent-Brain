@@ -663,7 +663,7 @@ function renderExplorer() {
   return `
   <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-2">Brain Pair Explorer</h2>
-    <p class="text-steel-blue mb-8">Select two brain types to explore how they interact in long-term relationships.</p>
+    <p class="text-steel-blue mb-8">Select two brain types to explore their relationship dynamics — including a Conflict Dashboard, 5 High-Risk Collision Moments, Repair Toolkit, and Compatibility Fingerprint.</p>
 
     <!-- Brain Selection -->
     <div class="grid md:grid-cols-2 gap-8 mb-8">
@@ -721,6 +721,12 @@ function selectBrainA(id) { explorerState.brainA = id; document.getElementById('
 function selectBrainB(id) { explorerState.brainB = id; document.getElementById('app').innerHTML = renderExplorer(); }
 function setExplorerView(view) { explorerState.view = view; document.getElementById('app').innerHTML = renderExplorer(); }
 
+function getConflictBadge(level) {
+  if (level === 'high') return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EF444420] text-[#EF4444] border border-[#EF444440]"><span class="w-1.5 h-1.5 rounded-full bg-[#EF4444]"></span>HIGH FRICTION</span>`;
+  if (level === 'low') return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#34D39920] text-[#34D399] border border-[#34D39940]"><span class="w-1.5 h-1.5 rounded-full bg-[#34D399]"></span>COMPLEMENT</span>`;
+  return `<span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F59E0B20] text-[#F59E0B] border border-[#F59E0B40]"><span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>NEGOTIATION</span>`;
+}
+
 function renderComparisonTable() {
   const table = generateComparisonTable(explorerState.brainA, explorerState.brainB);
   if (!table) return '<p class="text-steel-blue">Unable to generate comparison table.</p>';
@@ -728,10 +734,15 @@ function renderComparisonTable() {
   const a = table.brainA;
   const b = table.brainB;
 
+  // Count friction levels for summary
+  const highCount = table.rows.filter(r => r.conflictLevel === 'high').length;
+  const medCount = table.rows.filter(r => r.conflictLevel === 'medium').length;
+  const lowCount = table.rows.filter(r => r.conflictLevel === 'low').length;
+
   return `
     <div class="section-enter">
       <!-- Header -->
-      <div class="bg-gradient-to-r from-mid-navy to-light-navy/50 border border-light-navy/50 rounded-2xl p-6 md:p-8 mb-8">
+      <div class="bg-gradient-to-r from-mid-navy to-light-navy/50 border border-light-navy/50 rounded-2xl p-6 md:p-8 mb-6">
         <div class="flex items-center justify-center gap-6 mb-4">
           <div class="text-center">
             <img src="${a.icon}" alt="${a.name}" class="w-16 h-16 rounded-full mx-auto border-3" style="border-color:${a.color}">
@@ -743,21 +754,41 @@ function renderComparisonTable() {
             <span class="text-sm font-medium mt-2 block" style="color:${b.color}">${b.name}</span>
           </div>
         </div>
-        <h3 class="font-display font-bold text-xl text-warm-white text-center mb-3">How These Brains Experience the World Differently</h3>
-        <p class="text-steel-blue text-center text-sm leading-relaxed max-w-2xl mx-auto">A dimension-by-dimension comparison of how each brain shows up in relationships \u2014 where they collide, where they complement, and what each needs the other to understand.</p>
+        <h3 class="font-display font-bold text-xl text-warm-white text-center mb-2">Dimension-by-Dimension Analysis</h3>
+        <p class="text-steel-blue text-center text-sm leading-relaxed max-w-2xl mx-auto mb-4">How each brain shows up across 16 relational dimensions — where they collide, where they complement, and what each needs the other to understand.</p>
+        <!-- Friction Legend Summary -->
+        <div class="flex flex-wrap justify-center gap-3 mt-3">
+          <div class="flex items-center gap-2 bg-[#EF444415] border border-[#EF444430] rounded-lg px-3 py-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#EF4444]"></span>
+            <span class="text-xs text-[#EF4444] font-semibold">${highCount} High Friction</span>
+          </div>
+          <div class="flex items-center gap-2 bg-[#F59E0B15] border border-[#F59E0B30] rounded-lg px-3 py-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#F59E0B]"></span>
+            <span class="text-xs text-[#F59E0B] font-semibold">${medCount} Needs Negotiation</span>
+          </div>
+          <div class="flex items-center gap-2 bg-[#34D39915] border border-[#34D39930] rounded-lg px-3 py-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#34D399]"></span>
+            <span class="text-xs text-[#34D399] font-semibold">${lowCount} Natural Complement</span>
+          </div>
+        </div>
       </div>
 
       <!-- Dimension Cards (responsive, stacked layout) -->
-      <div class="space-y-6">
+      <div class="space-y-5">
         ${table.rows.map(row => `
-          <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl overflow-hidden">
-            <!-- Dimension Header -->
-            <div class="px-5 py-3 bg-mid-navy/60 border-b border-light-navy/30 flex items-center gap-3">
-              <i class="fas ${row.icon} text-lg" style="color:${row.color}"></i>
-              <div>
-                <h4 class="font-display font-semibold text-warm-white text-sm">${row.label}</h4>
-                <p class="text-steel-blue/60 text-xs">${row.desc}</p>
+          <div class="bg-mid-navy/40 border rounded-2xl overflow-hidden transition-all" style="border-color:${
+            row.conflictLevel === 'high' ? '#EF444430' : row.conflictLevel === 'low' ? '#34D39930' : '#F59E0B20'
+          }">
+            <!-- Dimension Header with conflict badge -->
+            <div class="px-5 py-3 bg-mid-navy/60 border-b border-light-navy/30 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <i class="fas ${row.icon} text-lg" style="color:${row.color}"></i>
+                <div>
+                  <h4 class="font-display font-semibold text-warm-white text-sm">${row.label}</h4>
+                  <p class="text-steel-blue/60 text-xs">${row.desc}</p>
+                </div>
               </div>
+              <div class="flex-shrink-0">${getConflictBadge(row.conflictLevel)}</div>
             </div>
 
             <!-- Side-by-Side Brain Descriptions -->
@@ -804,7 +835,7 @@ function renderComparisonTable() {
 
       <!-- Disclaimer -->
       <div class="bg-warm-amber/10 border border-warm-amber/20 rounded-2xl p-5 mt-8">
-        <p class="text-steel-blue text-xs leading-relaxed"><i class="fas fa-exclamation-triangle text-warm-amber mr-2"></i>This comparison is an educational tool for understanding neurological differences in relationships. Every individual is unique \u2014 these profiles describe patterns, not people. Always consult qualified professionals for clinical guidance.</p>
+        <p class="text-steel-blue text-xs leading-relaxed"><i class="fas fa-exclamation-triangle text-warm-amber mr-2"></i>This comparison is an educational tool for understanding neurological differences in relationships. Every individual is unique — these profiles describe patterns, not people. Always consult qualified professionals for clinical guidance.</p>
       </div>
     </div>`;
 }
@@ -815,19 +846,33 @@ function renderPairingReport() {
   
   const a = report.brainA;
   const b = report.brainB;
+  const cd = report.conflictDashboard;
+  const fp = report.fingerprint;
+
+  const fpLabels = {
+    conflictRisk: { label: 'Conflict Risk', icon: 'fa-fire', color: '#EF4444', inverted: true },
+    routineCompatibility: { label: 'Routine Compatibility', icon: 'fa-calendar-check', color: '#34D399', inverted: false },
+    sensoryCompatibility: { label: 'Sensory Compatibility', icon: 'fa-hand-sparkles', color: '#A78BFA', inverted: false },
+    communicationEase: { label: 'Communication Ease', icon: 'fa-comments', color: '#2DD4BF', inverted: false },
+    emotionalSync: { label: 'Emotional Sync', icon: 'fa-heart', color: '#FB7185', inverted: false },
+    recoverySpeed: { label: 'Repair Speed', icon: 'fa-arrows-rotate', color: '#F59E0B', inverted: false }
+  };
 
   return `
     <div class="section-enter">
-      <!-- Header -->
-      <div class="bg-gradient-to-r from-mid-navy to-light-navy/50 border border-light-navy/50 rounded-2xl p-6 md:p-8 mb-8">
+      <!-- ===== PAIR HEADER ===== -->
+      <div class="bg-gradient-to-r from-mid-navy to-light-navy/50 border border-light-navy/50 rounded-2xl p-6 md:p-8 mb-6">
         <div class="flex items-center justify-center gap-6 mb-4">
           <div class="text-center">
-            <img src="${a.icon}" alt="${a.name}" class="w-16 h-16 rounded-full mx-auto border-3" style="border-color:${a.color}">
+            <img src="${a.icon}" alt="${a.name}" class="w-20 h-20 rounded-full mx-auto border-3" style="border-color:${a.color}">
             <span class="text-sm font-medium mt-2 block" style="color:${a.color}">${a.name}</span>
           </div>
-          <div class="text-electric-teal text-2xl"><i class="fas fa-exchange-alt"></i></div>
           <div class="text-center">
-            <img src="${b.icon}" alt="${b.name}" class="w-16 h-16 rounded-full mx-auto border-3" style="border-color:${b.color}">
+            <div class="text-electric-teal text-3xl mb-1"><i class="fas fa-exchange-alt"></i></div>
+            <span class="text-steel-blue/50 text-xs">meets</span>
+          </div>
+          <div class="text-center">
+            <img src="${b.icon}" alt="${b.name}" class="w-20 h-20 rounded-full mx-auto border-3" style="border-color:${b.color}">
             <span class="text-sm font-medium mt-2 block" style="color:${b.color}">${b.name}</span>
           </div>
         </div>
@@ -835,8 +880,94 @@ function renderPairingReport() {
         <p class="text-steel-blue text-center leading-relaxed max-w-2xl mx-auto">${report.overview}</p>
       </div>
 
-      <!-- Areas of Harmony -->
-      <div class="mb-8">
+      <!-- ===== COMPATIBILITY FINGERPRINT ===== -->
+      ${fp ? `
+      <div class="bg-mid-navy/50 border border-light-navy/40 rounded-2xl p-6 mb-6">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-1"><i class="fas fa-fingerprint text-electric-teal mr-2"></i>Compatibility Fingerprint</h4>
+        <p class="text-steel-blue/70 text-xs mb-5">How this brain pairing scores across six key relational dimensions. Lower conflict risk and higher compatibility scores indicate a smoother neurological fit.</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          ${Object.entries(fp).map(([key, val]) => {
+            const meta = fpLabels[key];
+            if (!meta) return '';
+            const displayVal = meta.inverted ? (100 - val) : val; // For conflict risk, invert for bar fill
+            const barVal = val; // raw bar width
+            const barColor = key === 'conflictRisk'
+              ? (val >= 70 ? '#EF4444' : val >= 50 ? '#F59E0B' : '#34D399')
+              : (val >= 70 ? '#34D399' : val >= 50 ? '#F59E0B' : '#FB7185');
+            return `
+            <div class="bg-deep-navy/50 rounded-xl p-3">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="fas ${meta.icon} text-sm" style="color:${meta.color}"></i>
+                <span class="text-xs font-medium text-steel-blue">${meta.label}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-2 bg-light-navy/50 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all" style="width:${barVal}%;background:${barColor}"></div>
+                </div>
+                <span class="text-xs font-bold w-8 text-right" style="color:${barColor}">${barVal}%</span>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <canvas id="compatibilityRadar" class="max-w-xs mx-auto mt-4 block" height="260"></canvas>
+      </div>` : ''}
+
+      <!-- ===== CONFLICT DASHBOARD ===== -->
+      ${cd ? `
+      <div class="bg-gradient-to-br from-[#EF444410] to-[#DC262608] border border-[#EF444430] rounded-2xl p-6 mb-6">
+        <h4 class="font-display font-bold text-lg mb-1" style="color:#EF4444"><i class="fas fa-triangle-exclamation mr-2"></i>Conflict Dashboard</h4>
+        <p class="text-steel-blue/70 text-xs mb-4">The neurological fault lines in this pairing — and what actually drives the most painful conflicts.</p>
+        
+        <!-- Core Conflict Synthesis -->
+        <div class="bg-[#EF444415] border border-[#EF444430] rounded-xl p-4 mb-5">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-crosshairs text-[#EF4444] mt-0.5 flex-shrink-0"></i>
+            <div>
+              <p class="text-xs font-display font-semibold text-[#EF4444] mb-1">Core Conflict Pattern</p>
+              <p class="text-warm-white/80 text-sm leading-relaxed">${cd.conflictSynthesis}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5 Most Dangerous Moments -->
+        <h5 class="font-display font-semibold text-warm-white mb-3 flex items-center gap-2">
+          <i class="fas fa-skull text-[#EF4444] text-sm"></i>
+          5 High-Risk Collision Moments
+        </h5>
+        <div class="space-y-3 mb-5">
+          ${cd.dangerousMoments.map((m, i) => `
+          <div class="flex gap-3 bg-deep-navy/40 border border-[#EF444420] rounded-xl p-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-[#EF444420] flex items-center justify-center">
+              <i class="fas ${m.icon} text-sm text-[#EF4444]"></i>
+            </div>
+            <div>
+              <p class="text-xs font-display font-semibold text-warm-white mb-0.5">${m.title}</p>
+              <p class="text-steel-blue text-xs leading-relaxed">${m.desc}</p>
+            </div>
+          </div>`).join('')}
+        </div>
+
+        <!-- Repair Toolkit -->
+        <h5 class="font-display font-semibold text-warm-white mb-3 flex items-center gap-2">
+          <i class="fas fa-toolbox text-[#34D399] text-sm"></i>
+          Repair Toolkit
+        </h5>
+        <div class="grid md:grid-cols-2 gap-3">
+          ${cd.repairToolkit.map(t => `
+          <div class="bg-deep-navy/40 border rounded-xl p-4" style="border-color:${t.color}30">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background:${t.color}20">
+                <i class="fas ${t.icon} text-xs" style="color:${t.color}"></i>
+              </div>
+              <p class="text-xs font-display font-semibold text-warm-white">${t.title}</p>
+            </div>
+            <p class="text-steel-blue text-xs leading-relaxed">${t.desc}</p>
+          </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- ===== AREAS OF HARMONY ===== -->
+      <div class="mb-6">
         <h4 class="font-display font-semibold text-lg text-soft-green mb-4"><i class="fas fa-heart mr-2"></i>Where You Connect</h4>
         <div class="space-y-4">
           ${report.harmony.map(h => `
@@ -848,8 +979,8 @@ function renderPairingReport() {
         </div>
       </div>
 
-      <!-- Areas of Friction -->
-      <div class="mb-8">
+      <!-- ===== AREAS OF FRICTION ===== -->
+      <div class="mb-6">
         <h4 class="font-display font-semibold text-lg text-soft-coral mb-4"><i class="fas fa-bolt mr-2"></i>Where You Collide</h4>
         <div class="space-y-4">
           ${report.friction.map(f => `
@@ -872,8 +1003,8 @@ function renderPairingReport() {
         </div>
       </div>
 
-      <!-- Communication Bridges -->
-      <div class="mb-8">
+      <!-- ===== COMMUNICATION BRIDGES ===== -->
+      <div class="mb-6">
         <h4 class="font-display font-semibold text-lg text-warm-amber mb-4"><i class="fas fa-bridge mr-2"></i>Communication Bridges</h4>
         <div class="space-y-4">
           ${report.bridges.map(br => `
@@ -885,16 +1016,16 @@ function renderPairingReport() {
         </div>
       </div>
 
-      <!-- Environment Design -->
-      <div class="mb-8">
+      <!-- ===== ENVIRONMENT DESIGN ===== -->
+      <div class="mb-6">
         <h4 class="font-display font-semibold text-lg text-electric-teal mb-4"><i class="fas fa-home mr-2"></i>Environment Design</h4>
         <div class="bg-mid-navy/40 border border-light-navy/30 rounded-xl p-5">
           <p class="text-steel-blue text-sm leading-relaxed">${report.envDesign}</p>
         </div>
       </div>
 
-      <!-- What Each Brain Needs the Other to Know -->
-      <div class="mb-8">
+      <!-- ===== WHAT EACH BRAIN NEEDS ===== -->
+      <div class="mb-6">
         <h4 class="font-display font-semibold text-lg text-muted-purple mb-4"><i class="fas fa-envelope-open-text mr-2"></i>What Each Brain Needs the Other to Know</h4>
         <div class="grid md:grid-cols-2 gap-4">
           <div class="bg-mid-navy/60 border rounded-xl p-5" style="border-color:${a.color}40">
@@ -1026,15 +1157,79 @@ function renderRadarChart() {
   });
 }
 
+function renderCompatibilityRadar() {
+  const canvas = document.getElementById('compatibilityRadar');
+  if (!canvas) return;
+
+  const report = generatePairingReport(explorerState.brainA, explorerState.brainB);
+  if (!report || !report.fingerprint) return;
+
+  const fp = report.fingerprint;
+  const labels = ['Conflict Risk\n(inverted)', 'Routine\nCompatibility', 'Sensory\nCompatibility', 'Communication\nEase', 'Emotional\nSync', 'Repair\nSpeed'];
+  const data = [
+    100 - fp.conflictRisk, // invert so high = good for radar
+    fp.routineCompatibility,
+    fp.sensoryCompatibility,
+    fp.communicationEase,
+    fp.emotionalSync,
+    fp.recoverySpeed
+  ];
+
+  new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Compatibility',
+        data,
+        backgroundColor: 'rgba(100, 223, 223, 0.12)',
+        borderColor: '#64DFDF',
+        borderWidth: 2,
+        pointBackgroundColor: '#64DFDF',
+        pointBorderColor: '#64DFDF',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            stepSize: 25,
+            color: '#A0B4C8',
+            backdropColor: 'transparent',
+            font: { size: 8 }
+          },
+          grid: { color: 'rgba(160, 180, 200, 0.15)' },
+          angleLines: { color: 'rgba(160, 180, 200, 0.15)' },
+          pointLabels: {
+            color: '#A0B4C8',
+            font: { size: 9, family: 'Space Grotesk' }
+          }
+        }
+      }
+    }
+  });
+}
+
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
   navigateTo('home');
 });
 
-// Watch for chart canvas to appear and render
+// Watch for chart canvases to appear and render
 const observer = new MutationObserver(() => {
   if (document.getElementById('radarChart')) {
     setTimeout(renderRadarChart, 100);
+  }
+  if (document.getElementById('compatibilityRadar')) {
+    setTimeout(renderCompatibilityRadar, 150);
   }
 });
 observer.observe(document.body, { childList: true, subtree: true });

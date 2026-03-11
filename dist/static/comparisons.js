@@ -6,40 +6,90 @@
 // analysis and relational dynamics.
 // ============================================================
 
+// conflictLevel: 'high' = 🔴 major friction, 'medium' = 🟡 negotiation needed, 'low' = 🟢 tends to complement
 const COMPARISON_DIMENSIONS = [
-  { key: 'coreWiring', label: 'Core Wiring', icon: 'fa-microchip', color: '#64DFDF',
+  { key: 'coreWiring', label: 'Core Wiring', icon: 'fa-microchip', color: '#64DFDF', conflictLevel: 'medium',
     desc: 'How each brain fundamentally processes the world' },
-  { key: 'attentionInConversation', label: 'Attention in Conversation', icon: 'fa-comments', color: '#FBBF24',
+  { key: 'attentionInConversation', label: 'Attention in Conversation', icon: 'fa-comments', color: '#FBBF24', conflictLevel: 'medium',
     desc: 'How each brain shows up when the other is talking' },
-  { key: 'emotionalRegulation', label: 'Emotional Regulation', icon: 'fa-heart', color: '#FB7185',
+  { key: 'emotionalRegulation', label: 'Emotional Regulation', icon: 'fa-heart', color: '#FB7185', conflictLevel: 'high',
     desc: 'How each brain handles emotional intensity' },
-  { key: 'conflictStyle', label: 'Conflict Style', icon: 'fa-bolt', color: '#EF4444',
+  { key: 'conflictStyle', label: 'Conflict Style', icon: 'fa-bolt', color: '#EF4444', conflictLevel: 'high',
     desc: 'What happens when they disagree' },
-  { key: 'sensoryNeeds', label: 'Sensory Environment Needs', icon: 'fa-hand-sparkles', color: '#A78BFA',
+  { key: 'sensoryNeeds', label: 'Sensory Environment Needs', icon: 'fa-hand-sparkles', color: '#A78BFA', conflictLevel: 'high',
     desc: 'What each brain needs the physical space to feel like' },
-  { key: 'timePlanning', label: 'Time & Planning', icon: 'fa-clock', color: '#F59E0B',
+  { key: 'timePlanning', label: 'Time & Planning', icon: 'fa-clock', color: '#F59E0B', conflictLevel: 'medium',
     desc: 'How each brain relates to schedules and the future' },
-  { key: 'communicationStyle', label: 'Communication Style', icon: 'fa-microphone', color: '#2DD4BF',
+  { key: 'communicationStyle', label: 'Communication Style', icon: 'fa-microphone', color: '#2DD4BF', conflictLevel: 'medium',
     desc: 'How each brain naturally expresses and receives' },
-  { key: 'energySocial', label: 'Energy & Social Battery', icon: 'fa-battery-half', color: '#34D399',
+  { key: 'energySocial', label: 'Energy & Social Battery', icon: 'fa-battery-half', color: '#34D399', conflictLevel: 'medium',
     desc: 'How each brain charges and depletes' },
-  { key: 'routineSpontaneity', label: 'Routine vs. Spontaneity', icon: 'fa-random', color: '#F97316',
+  { key: 'routineSpontaneity', label: 'Routine vs. Spontaneity', icon: 'fa-random', color: '#F97316', conflictLevel: 'high',
     desc: 'How each brain relates to structure and novelty' },
-  { key: 'decisionMaking', label: 'Decision-Making', icon: 'fa-scale-balanced', color: '#818CF8',
+  { key: 'decisionMaking', label: 'Decision-Making', icon: 'fa-scale-balanced', color: '#818CF8', conflictLevel: 'medium',
     desc: 'How each brain arrives at choices' },
-  { key: 'intimacyConnection', label: 'Intimacy & Connection', icon: 'fa-hand-holding-heart', color: '#EC4899',
+  { key: 'intimacyConnection', label: 'Intimacy & Connection', icon: 'fa-hand-holding-heart', color: '#EC4899', conflictLevel: 'low',
     desc: 'How each brain gives and receives love' },
-  { key: 'householdLogistics', label: 'Household & Logistics', icon: 'fa-house-chimney', color: '#8B9DAF',
+  { key: 'householdLogistics', label: 'Household & Logistics', icon: 'fa-house-chimney', color: '#8B9DAF', conflictLevel: 'high',
     desc: 'Who carries what and how tasks are shared' },
-  { key: 'maskingAuthenticity', label: 'Masking & Authenticity', icon: 'fa-masks-theater', color: '#7C3AED',
+  { key: 'maskingAuthenticity', label: 'Masking & Authenticity', icon: 'fa-masks-theater', color: '#7C3AED', conflictLevel: 'medium',
     desc: 'What each brain hides and what it costs' },
-  { key: 'triggerPoint', label: 'What Triggers Me About You', icon: 'fa-fire', color: '#DC2626',
+  { key: 'triggerPoint', label: 'What Triggers Me About You', icon: 'fa-fire', color: '#DC2626', conflictLevel: 'high',
     desc: 'The specific neurological friction point each brain feels' },
-  { key: 'complement', label: 'How We Complement Each Other', icon: 'fa-puzzle-piece', color: '#22D3EE',
+  { key: 'complement', label: 'How We Complement Each Other', icon: 'fa-puzzle-piece', color: '#22D3EE', conflictLevel: 'low',
     desc: 'Where the pairing genuinely shines' },
-  { key: 'needToUnderstand', label: 'What I Need You to Understand', icon: 'fa-envelope-open-text', color: '#E11D48',
+  { key: 'needToUnderstand', label: 'What I Need You to Understand', icon: 'fa-envelope-open-text', color: '#E11D48', conflictLevel: 'medium',
     desc: 'The one thing each brain needs the other to truly get' }
 ];
+
+// Returns dynamic conflictLevel for a specific pair on a specific dimension
+function getPairConflictLevel(dimKey, brainAId, brainBId) {
+  const pairKey = [brainAId, brainBId].sort().join('|');
+  // Check curated override
+  if (PAIR_CONFLICT_OVERRIDES[pairKey] && PAIR_CONFLICT_OVERRIDES[pairKey][dimKey]) {
+    return PAIR_CONFLICT_OVERRIDES[pairKey][dimKey];
+  }
+  // Fall back to dimension default
+  const dim = COMPARISON_DIMENSIONS.find(d => d.key === dimKey);
+  return dim ? dim.conflictLevel : 'medium';
+}
+
+// Per-pair overrides for conflict levels on specific dimensions
+const PAIR_CONFLICT_OVERRIDES = {
+  'adhd-c|asd-1': {
+    routineSpontaneity: 'high', sensoryNeeds: 'high', conflictStyle: 'high',
+    emotionalRegulation: 'high', householdLogistics: 'high', timePlanning: 'high',
+    complement: 'low', intimacyConnection: 'low'
+  },
+  'adhd-c|neurotypical': {
+    householdLogistics: 'high', emotionalRegulation: 'high', routineSpontaneity: 'high',
+    timePlanning: 'high', decisionMaking: 'high',
+    complement: 'low', communicationStyle: 'medium'
+  },
+  'adhd-i|asd-1': {
+    routineSpontaneity: 'high', communicationStyle: 'high', timePlanning: 'high',
+    householdLogistics: 'high',
+    complement: 'low', energySocial: 'low', intimacyConnection: 'low'
+  },
+  'asd-1|audhd': {
+    routineSpontaneity: 'high', sensoryNeeds: 'high', conflictStyle: 'medium',
+    complement: 'low', coreWiring: 'low'
+  },
+  'audhd|neurotypical': {
+    coreWiring: 'high', maskingAuthenticity: 'high', routineSpontaneity: 'high',
+    emotionalRegulation: 'high', communicationStyle: 'high',
+    complement: 'low'
+  },
+  'adhd-c|adhd-i': {
+    householdLogistics: 'high', emotionalRegulation: 'high', energySocial: 'high',
+    timePlanning: 'high',
+    complement: 'low', coreWiring: 'low', intimacyConnection: 'low'
+  },
+  'dyslexia|neurotypical': {
+    householdLogistics: 'low', routineSpontaneity: 'low', emotionalRegulation: 'low',
+    conflictStyle: 'low', triggerPoint: 'medium', maskingAuthenticity: 'medium'
+  }
+};
 
 // ============================================================
 // RELATIONAL TRAIT DATABASE
@@ -542,6 +592,7 @@ function generateComparisonTable(brainAId, brainBId) {
       icon: dim.icon,
       color: dim.color,
       desc: dim.desc,
+      conflictLevel: getPairConflictLevel(dim.key, brainAId, brainBId),
       brainA: profileA[dim.key] || '',
       brainB: profileB[dim.key] || '',
       conflict: dynamic ? dynamic.conflict : '',
