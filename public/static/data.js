@@ -425,6 +425,163 @@ const NEUROTYPE_GROUPS = {
   'Combined': ['audhd']
 };
 
+// ============================================================
+// CLINICAL AT-A-GLANCE FINGERPRINTS
+// 5-bar visual signatures for each neurotype
+// Values 0–10 represent relative intensity
+// ============================================================
+const NEUROTYPE_FINGERPRINTS = {
+  neurotypical:   { executiveLoad: 3, sensorySensitivity: 3, maskingDemand: 2, emotionalIntensity: 3, socialEnergyCost: 3 },
+  'adhd-c':       { executiveLoad: 8, sensorySensitivity: 4, maskingDemand: 6, emotionalIntensity: 8, socialEnergyCost: 3 },
+  'adhd-i':       { executiveLoad: 8, sensorySensitivity: 4, maskingDemand: 9, emotionalIntensity: 6, socialEnergyCost: 6 },
+  overfocused:    { executiveLoad: 7, sensorySensitivity: 5, maskingDemand: 6, emotionalIntensity: 7, socialEnergyCost: 6 },
+  temporal:       { executiveLoad: 7, sensorySensitivity: 7, maskingDemand: 6, emotionalIntensity: 10, socialEnergyCost: 7 },
+  limbic:         { executiveLoad: 7, sensorySensitivity: 4, maskingDemand: 8, emotionalIntensity: 6, socialEnergyCost: 8 },
+  ringoffire:     { executiveLoad: 8, sensorySensitivity: 10, maskingDemand: 7, emotionalIntensity: 10, socialEnergyCost: 8 },
+  anxious:        { executiveLoad: 7, sensorySensitivity: 6, maskingDemand: 9, emotionalIntensity: 8, socialEnergyCost: 9 },
+  'adhd-dyslexia':{ executiveLoad: 9, sensorySensitivity: 4, maskingDemand: 9, emotionalIntensity: 7, socialEnergyCost: 5 },
+  dyslexia:       { executiveLoad: 4, sensorySensitivity: 3, maskingDemand: 6, emotionalIntensity: 4, socialEnergyCost: 3 },
+  'asd-1':        { executiveLoad: 6, sensorySensitivity: 8, maskingDemand: 9, emotionalIntensity: 7, socialEnergyCost: 9 },
+  'asd-2':        { executiveLoad: 7, sensorySensitivity: 9, maskingDemand: 7, emotionalIntensity: 8, socialEnergyCost: 10 },
+  'asd-3':        { executiveLoad: 8, sensorySensitivity: 10, maskingDemand: 3, emotionalIntensity: 9, socialEnergyCost: 10 },
+  audhd:          { executiveLoad: 10, sensorySensitivity: 9, maskingDemand: 10, emotionalIntensity: 9, socialEnergyCost: 10 }
+};
+
+const FINGERPRINT_LABELS = [
+  { key: 'executiveLoad',     label: 'Executive Load',      icon: 'fa-cogs',         color: '#F97316' },
+  { key: 'sensorySensitivity',label: 'Sensory Sensitivity', icon: 'fa-hand-sparkles', color: '#A78BFA' },
+  { key: 'maskingDemand',     label: 'Masking Demand',      icon: 'fa-masks-theater', color: '#EC4899' },
+  { key: 'emotionalIntensity',label: 'Emotional Intensity', icon: 'fa-heart',         color: '#FB7185' },
+  { key: 'socialEnergyCost',  label: 'Social Energy Cost',  icon: 'fa-battery-half',  color: '#34D399' }
+];
+
+// ============================================================
+// RELATED PROFILES — 2-3 similar profiles per neurotype
+// with differentiation note
+// ============================================================
+const RELATED_PROFILES = {
+  neurotypical: [
+    { id: 'adhd-i', note: 'If attention drift and fatigue are more present than you\'d expect' },
+    { id: 'anxious', note: 'If chronic low-level worry colors your daily experience' }
+  ],
+  'adhd-c': [
+    { id: 'audhd',      note: 'If social overwhelm and routine-craving coexist with the chaos' },
+    { id: 'ringoffire', note: 'If every sense feels turned up and moods cycle rapidly' },
+    { id: 'temporal',   note: 'If explosive anger episodes feel disproportionate and alien' }
+  ],
+  'adhd-i': [
+    { id: 'limbic',       note: 'If persistent low mood is a primary feature alongside the drift' },
+    { id: 'audhd',        note: 'If sensory sensitivity and social exhaustion are also significant' },
+    { id: 'adhd-dyslexia',note: 'If reading and spelling struggles compound the attention issues' }
+  ],
+  overfocused: [
+    { id: 'asd-1',    note: 'If social difficulty and sensory needs are also significant features' },
+    { id: 'anxious',  note: 'If the loops are primarily anxiety-driven rather than rigidity-driven' },
+    { id: 'audhd',    note: 'If both novelty-seeking and rigid routine-locking alternate unpredictably' }
+  ],
+  temporal: [
+    { id: 'ringoffire', note: 'If the intensity is global rather than episodic and storm-like' },
+    { id: 'limbic',     note: 'If the mood picture is more chronic low than explosive high' },
+    { id: 'adhd-c',     note: 'If the impulsivity is consistent without distinct storm episodes' }
+  ],
+  limbic: [
+    { id: 'adhd-i',   note: 'If the drift and executive freeze are more prominent than the low mood' },
+    { id: 'anxious',  note: 'If worry and dread rather than heaviness are the dominant tone' },
+    { id: 'audhd',    note: 'If autistic burnout cycles are mistaken for depressive episodes' }
+  ],
+  ringoffire: [
+    { id: 'temporal', note: 'If the intensity comes in distinct storms rather than constant global fire' },
+    { id: 'audhd',    note: 'If the opposing drives of novelty and routine create the overwhelm' },
+    { id: 'anxious',  note: 'If fear and worry rather than global activation are the dominant feature' }
+  ],
+  anxious: [
+    { id: 'adhd-i',     note: 'If the core problem is attention failure rather than fear-based avoidance' },
+    { id: 'overfocused',note: 'If cognitive loops and inability to shift gears are as prominent as the worry' },
+    { id: 'asd-1',      note: 'If social rules and sensory needs underlie much of the anxiety' }
+  ],
+  'adhd-dyslexia': [
+    { id: 'adhd-i',    note: 'If reading difficulties are minimal and attention is the primary bottleneck' },
+    { id: 'dyslexia',  note: 'If executive functions are intact and only literacy is challenged' },
+    { id: 'audhd',     note: 'If social and sensory dimensions compound the dual cognitive load' }
+  ],
+  dyslexia: [
+    { id: 'adhd-dyslexia', note: 'If attention, impulsivity, or executive dysfunction are also present' },
+    { id: 'adhd-i',        note: 'If reading avoidance stems from attention drift rather than decoding failure' }
+  ],
+  'asd-1': [
+    { id: 'audhd',      note: 'If novelty-seeking, impulsivity, or chaos coexist with the deep focus' },
+    { id: 'overfocused',note: 'If the rigidity is present without the broader autistic social profile' },
+    { id: 'asd-2',      note: 'If support needs are more substantial and masking is less successful' }
+  ],
+  'asd-2': [
+    { id: 'asd-1',  note: 'If masking is more successful and support needs are lower' },
+    { id: 'asd-3',  note: 'If communication differences are more profound and support needs are highest' },
+    { id: 'audhd',  note: 'If ADHD traits of impulsivity and novelty-seeking are also prominent' }
+  ],
+  'asd-3': [
+    { id: 'asd-2',  note: 'If some functional communication is present and support needs are somewhat lower' },
+    { id: 'audhd',  note: 'If high energy and sensory seeking coexist with deep routine needs' }
+  ],
+  audhd: [
+    { id: 'asd-1',  note: 'If the ASD dimension is more prominent and ADHD traits are secondary' },
+    { id: 'adhd-c', note: 'If the ADHD dimension dominates and autistic traits are minimal' },
+    { id: 'ringoffire', note: 'If the experience is more global overwhelm than internal tug-of-war' }
+  ]
+};
+
+// ============================================================
+// CONFUSED WITH — Common misdiagnoses per neurotype
+// ============================================================
+const CONFUSED_WITH = {
+  neurotypical: [],
+  'adhd-c':     ['Bipolar Disorder (manic phase)', 'Oppositional Defiant Disorder', 'Conduct Disorder', 'Substance Use Disorder'],
+  'adhd-i':     ['Clinical Depression', 'Generalized Anxiety Disorder', 'Chronic Fatigue Syndrome', 'Personality disorder ("just lazy")'],
+  overfocused:  ['OCD', 'Generalized Anxiety Disorder', 'Autism Spectrum (rigidity feature)', 'Treatment-resistant depression'],
+  temporal:     ['Bipolar Disorder', 'Intermittent Explosive Disorder', 'Borderline Personality Disorder', 'Oppositional Defiant Disorder'],
+  limbic:       ['Major Depressive Disorder', 'Dysthymia', 'Bipolar II (depressive phase)', 'Chronic Fatigue Syndrome'],
+  ringoffire:   ['Bipolar I Disorder', 'Manic Episode', 'Psychotic Disorder', 'Substance-induced mood disorder'],
+  anxious:      ['Generalized Anxiety Disorder', 'Social Anxiety Disorder', 'Panic Disorder', 'ADHD with secondary anxiety'],
+  'adhd-dyslexia': ['ADHD-only', 'Dyslexia-only', 'Intellectual disability', 'Visual processing disorder'],
+  dyslexia:     ['Low intelligence', 'Lack of effort', 'Vision problems', 'ADHD (reading avoidance confused with attention deficit)'],
+  'asd-1':      ['Social Anxiety Disorder', 'Schizoid Personality Disorder', 'ADHD (inattentive)', 'Gifted/twice-exceptional without diagnosis'],
+  'asd-2':      ['Intellectual Disability', 'Language disorder', 'Selective mutism', 'Severe Anxiety Disorder'],
+  'asd-3':      ['Intellectual Disability', 'Childhood Schizophrenia', 'Severe language delay', 'Deaf-blind conditions'],
+  audhd:        ['ADHD-only', 'ASD-only', 'Bipolar Disorder', 'Emotionally Unstable Personality Disorder']
+};
+
+// Profile tab definitions
+const PROFILE_TABS = [
+  { id: 'overview',      label: 'Overview',     icon: 'fa-brain' },
+  { id: 'daily',         label: 'Daily Life',   icon: 'fa-calendar-day' },
+  { id: 'inner',         label: 'Inner World',  icon: 'fa-heart' },
+  { id: 'relationships', label: 'Relationships',icon: 'fa-users' },
+  { id: 'growth',        label: 'Growth',       icon: 'fa-star' }
+];
+
+// Dimension to tab mapping
+const DIMENSION_TO_TAB = {
+  prevalence:      'overview',
+  mechanism:       'overview',
+  amenType:        'overview',
+  coreChallenge:   'overview',
+  executiveFunction:'daily',
+  attention:       'daily',
+  time:            'daily',
+  work:            'daily',
+  home:            'daily',
+  reading:         'daily',
+  sensory:         'inner',
+  emotional:       'inner',
+  masking:         'inner',
+  selfAwareness:   'inner',
+  social:          'relationships',
+  feedback:        'relationships',
+  strength:        'growth',
+  prognosis:       'growth',
+  whatMissed:      'growth',
+  needToHear:      'growth'
+};
+
 // Dimension labels for profile display
 const DIMENSION_LABELS = {
   prevalence: { label: 'Prevalence in Adults', icon: 'fa-chart-bar' },

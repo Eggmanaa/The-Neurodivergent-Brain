@@ -6,6 +6,7 @@
 
 let currentSection = 'home';
 let currentProfile = 'adhd-c';
+let currentProfileTab = 'overview';
 let assessmentState = { currentQ: 0, answers: {}, completed: false, results: null, started: false };
 let explorerState = { brainA: null, brainB: null, view: 'narrative' };
 
@@ -19,7 +20,7 @@ function navigateTo(section, sub) {
   const app = document.getElementById('app');
   switch(section) {
     case 'home': app.innerHTML = renderHome(); break;
-    case 'profiles': currentProfile = sub || currentProfile || 'adhd-c'; app.innerHTML = renderProfiles(); break;
+    case 'profiles': currentProfile = sub || currentProfile || 'adhd-c'; currentProfileTab = 'overview'; app.innerHTML = renderProfiles(); break;
     case 'assessment': app.innerHTML = renderAssessment(); break;
     case 'explorer': app.innerHTML = renderExplorer(); break;
     case 'about': app.innerHTML = renderAbout(); break;
@@ -108,6 +109,11 @@ function renderHome() {
 // ==================== NEUROTYPE PROFILES ====================
 function renderProfiles() {
   const nt = NEUROTYPES[currentProfile];
+  const fp = NEUROTYPE_FINGERPRINTS[currentProfile];
+  const related = RELATED_PROFILES[currentProfile] || [];
+  const confused = CONFUSED_WITH[currentProfile] || [];
+  const tab = currentProfileTab;
+
   return `
   <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h2 class="font-display font-bold text-3xl md:text-4xl text-warm-white mb-2">The Neurotypes</h2>
@@ -136,67 +142,201 @@ function renderProfiles() {
 
     <!-- Profile Content -->
     <div class="section-enter">
-      <!-- Header -->
-      <div class="flex flex-col md:flex-row items-start gap-6 mb-10">
-        <img src="${nt.icon}" alt="${nt.name}" class="neurotype-icon-lg flex-shrink-0" style="border-color:${nt.color}">
-        <div>
-          <h3 class="font-display font-bold text-2xl md:text-3xl text-warm-white mb-2">${nt.name}</h3>
-          <p class="font-accent italic text-lg text-steel-blue leading-relaxed mb-4">${nt.tagline}</p>
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium" style="background:${nt.color}20;color:${nt.color}">
-            <i class="fas fa-chart-bar"></i>
-            <span>Prevalence: ${nt.prevalence.split('.')[0]}.</span>
+      <!-- Hero Header -->
+      <div class="relative overflow-hidden rounded-2xl mb-6" style="background: linear-gradient(135deg, ${nt.color}18 0%, #0A162800 60%);">
+        <div class="absolute inset-0 border border-[${nt.color}]/25 rounded-2xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row items-start gap-6 p-6 md:p-8">
+          <div class="relative flex-shrink-0">
+            <img src="${nt.icon}" alt="${nt.name}" class="neurotype-icon-lg" style="border-color:${nt.color}; border-width: 3px; border-style: solid; border-radius: 1rem; width: 110px; height: 110px; object-fit: cover;">
+            <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-deep-navy" style="background:${nt.color}"></div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-display font-bold text-2xl md:text-3xl text-warm-white mb-1">${nt.name}</h3>
+            <p class="font-accent italic text-base text-steel-blue leading-relaxed mb-4">${nt.tagline}</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium" style="background:${nt.color}18;color:${nt.color};border:1px solid ${nt.color}40">
+                <i class="fas fa-chart-bar text-xs"></i>${nt.prevalence.split('.')[0].substring(0, 60)}${nt.prevalence.split('.')[0].length > 60 ? '...' : ''}
+              </span>
+              ${nt.amenType ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-mid-navy/80 text-steel-blue border border-light-navy/50"><i class="fas fa-brain text-xs"></i>Amen Type Identified</span>` : ''}
+            </div>
           </div>
         </div>
       </div>
 
-      ${nt.amenType ? `
-      <!-- Amen Brain Type -->
-      <div class="bg-gradient-to-r from-mid-navy/60 to-light-navy/30 border border-light-navy/50 rounded-2xl p-6 mb-8">
-        <h4 class="font-display font-semibold text-lg text-warm-white mb-3"><i class="fas fa-brain mr-2" style="color:${nt.color}"></i>Brain Imaging (Dr. Amen's SPECT Research)</h4>
-        <p class="text-steel-blue leading-relaxed text-sm">${nt.amenType}</p>
+      <!-- Clinical At-a-Glance Fingerprint -->
+      <div class="bg-mid-navy/60 border border-light-navy/50 rounded-2xl p-5 mb-6">
+        <h4 class="font-display font-semibold text-sm text-warm-white mb-4 flex items-center gap-2">
+          <i class="fas fa-fingerprint" style="color:${nt.color}"></i>
+          Clinical Fingerprint — Relative Intensity
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+          ${FINGERPRINT_LABELS.map(fl => {
+            const val = fp[fl.key];
+            const pct = (val / 10) * 100;
+            return `
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="flex items-center gap-1 text-steel-blue"><i class="fas ${fl.icon} text-xs" style="color:${fl.color}"></i><span class="hidden sm:inline">${fl.label}</span><span class="sm:hidden">${fl.label}</span></span>
+                <span class="font-bold text-xs" style="color:${fl.color}">${val}/10</span>
+              </div>
+              <div class="h-2.5 bg-light-navy/60 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-700" style="width:${pct}%;background:${fl.color}"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Profile Section Tabs -->
+      <div class="flex gap-1 mb-6 overflow-x-auto pb-1">
+        ${PROFILE_TABS.map(t => `
+          <button onclick="selectProfileTab('${t.id}')" class="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all flex-shrink-0 ${tab === t.id ? 'text-deep-navy font-semibold' : 'text-steel-blue hover:text-warm-white hover:bg-light-navy/40 bg-mid-navy/40'}" style="${tab === t.id ? 'background:'+nt.color+';' : ''}">
+            <i class="fas ${t.icon} text-xs"></i>${t.label}
+          </button>
+        `).join('')}
+      </div>
+
+      <!-- Tab Content -->
+      <div class="section-enter">
+        ${renderProfileTab(nt, tab)}
+      </div>
+
+      <!-- Confused With Section -->
+      ${confused.length > 0 ? `
+      <div class="mt-8 bg-warm-amber/8 border border-warm-amber/25 rounded-2xl p-5">
+        <h4 class="font-display font-semibold text-warm-amber mb-3 flex items-center gap-2 text-sm">
+          <i class="fas fa-triangle-exclamation"></i>Frequently Confused With
+        </h4>
+        <div class="flex flex-wrap gap-2">
+          ${confused.map(c => `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-mid-navy/60 text-steel-blue border border-light-navy/50">
+              <i class="fas fa-arrow-right-arrow-left text-warm-amber/60 text-xs"></i>${c}
+            </span>
+          `).join('')}
+        </div>
+        <p class="text-steel-blue/60 text-xs mt-3">Accurate identification matters — wrong treatment can be ineffective or harmful. Seek a qualified clinician who specializes in adult neurodevelopmental assessment.</p>
       </div>` : ''}
 
-      <!-- Core Challenge Highlight -->
-      <div class="bg-mid-navy/60 border-l-4 rounded-r-xl p-6 mb-8" style="border-color:${nt.color}">
-        <h4 class="font-display font-semibold text-lg text-warm-white mb-2"><i class="fas fa-bullseye mr-2" style="color:${nt.color}"></i>Core Challenge</h4>
-        <p class="text-steel-blue leading-relaxed">${nt.coreChallenge}</p>
-      </div>
+      <!-- Related Profiles -->
+      ${related.length > 0 ? `
+      <div class="mt-6 mb-2">
+        <h4 class="font-display font-semibold text-warm-white mb-3 flex items-center gap-2 text-sm">
+          <i class="fas fa-diagram-project text-electric-teal"></i>Related Profiles
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${related.map(r => {
+            const rn = NEUROTYPES[r.id];
+            const shortName = rn.name.replace('ADHD — ','').replace('ASD — ','').replace(' ADD','');
+            return `
+            <button onclick="selectProfile('${r.id}')" class="flex items-start gap-3 p-4 rounded-xl bg-mid-navy/40 border border-light-navy/40 hover:border-light-navy/80 hover:bg-mid-navy/70 transition-all text-left group">
+              <img src="${rn.icon}" alt="${rn.name}" class="w-10 h-10 rounded-lg flex-shrink-0 border-2 object-cover" style="border-color:${rn.color}">
+              <div class="min-w-0">
+                <div class="font-display font-semibold text-sm group-hover:text-warm-white transition-colors" style="color:${rn.color}">${shortName}</div>
+                <p class="text-steel-blue/80 text-xs leading-snug mt-0.5">${r.note}</p>
+              </div>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
 
-      <!-- What They Need to Hear -->
-      <div class="bg-gradient-to-r from-mid-navy/60 to-light-navy/30 border border-light-navy/50 rounded-2xl p-6 mb-8">
-        <h4 class="font-display font-semibold text-lg text-warm-white mb-3"><i class="fas fa-comment-dots mr-2" style="color:${nt.color}"></i>What This Brain Needs to Hear</h4>
-        <p class="quote-text text-warm-white/90 text-lg leading-relaxed">${nt.needToHear}</p>
-      </div>
-
-      <!-- Greatest Hidden Strength -->
-      <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-6 mb-8">
-        <h4 class="font-display font-semibold text-lg text-warm-white mb-2"><i class="fas fa-star mr-2 text-warm-amber"></i>Greatest Hidden Strength</h4>
-        <p class="text-steel-blue leading-relaxed">${nt.strength}</p>
-      </div>
-
-      <!-- All Dimensions -->
-      <h4 class="font-display font-semibold text-xl text-warm-white mb-6">Detailed Profile</h4>
-      <div class="grid md:grid-cols-2 gap-4">
-        ${Object.entries(DIMENSION_LABELS).map(([key, dim]) => {
-          if (key === 'coreChallenge' || key === 'strength' || key === 'amenType') return '';
-          const val = nt[key];
-          if (!val) return '';
-          return `
-          <div class="dimension-card">
-            <div class="flex items-center gap-2 mb-2">
-              <i class="fas ${dim.icon} text-sm" style="color:${nt.color}"></i>
-              <h5 class="font-display font-medium text-warm-white text-sm">${dim.label}</h5>
-            </div>
-            <p class="text-steel-blue text-sm leading-relaxed">${val}</p>
-          </div>`;
-        }).join('')}
-      </div>
     </div>
   </section>`;
 }
 
+function renderProfileTab(nt, tab) {
+  if (tab === 'overview') {
+    return `
+      ${nt.amenType ? `
+      <div class="bg-gradient-to-r from-mid-navy/70 to-light-navy/30 border border-light-navy/50 rounded-2xl p-6 mb-5">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-3"><i class="fas fa-brain mr-2" style="color:${nt.color}"></i>Brain Imaging — Dr. Amen's SPECT Research</h4>
+        <p class="text-steel-blue leading-relaxed text-sm">${nt.amenType}</p>
+      </div>` : ''}
+      <div class="bg-mid-navy/60 border-l-4 rounded-r-2xl p-6 mb-5" style="border-color:${nt.color}">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-2"><i class="fas fa-bullseye mr-2" style="color:${nt.color}"></i>Core Challenge</h4>
+        <p class="text-steel-blue leading-relaxed">${nt.coreChallenge}</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        ${renderDimCard(nt, 'mechanism', 'Core Neurological Mechanism', 'fa-microscope')}
+        ${renderDimCard(nt, 'prevalence', 'Prevalence in Adults', 'fa-chart-bar')}
+      </div>`;
+  }
+  if (tab === 'daily') {
+    return `
+      <div class="grid md:grid-cols-2 gap-4">
+        ${renderDimCard(nt, 'executiveFunction', 'Executive Function Profile', 'fa-cogs')}
+        ${renderDimCard(nt, 'attention', 'Attention Pattern', 'fa-eye')}
+        ${renderDimCard(nt, 'time', 'Time Perception', 'fa-clock')}
+        ${renderDimCard(nt, 'work', 'Work Performance', 'fa-briefcase')}
+        ${renderDimCard(nt, 'home', 'Home Management', 'fa-home')}
+        ${renderDimCard(nt, 'reading', 'Reading & Written Communication', 'fa-book-open')}
+      </div>`;
+  }
+  if (tab === 'inner') {
+    return `
+      <div class="grid md:grid-cols-2 gap-4">
+        ${renderDimCard(nt, 'sensory', 'Sensory Processing', 'fa-hand-sparkles')}
+        ${renderDimCard(nt, 'emotional', 'Emotional Regulation', 'fa-heart')}
+        ${renderDimCard(nt, 'masking', 'Masking Behavior', 'fa-theater-masks')}
+        ${renderDimCard(nt, 'selfAwareness', 'Self-Awareness & Self-Advocacy', 'fa-lightbulb')}
+      </div>`;
+  }
+  if (tab === 'relationships') {
+    return `
+      <div class="grid md:grid-cols-2 gap-4 mb-5">
+        ${renderDimCard(nt, 'social', 'Social Presentation', 'fa-users')}
+        ${renderDimCard(nt, 'feedback', 'Relationship to Feedback', 'fa-comments')}
+      </div>
+      <div class="bg-mid-navy/50 border border-light-navy/40 rounded-2xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="fas fa-handshake text-electric-teal"></i>
+          <h4 class="font-display font-semibold text-warm-white text-sm">Explore This Brain in Relationships</h4>
+        </div>
+        <p class="text-steel-blue text-sm mb-4">See how <strong class="text-warm-white">${nt.name}</strong> pairs with other neurotypes — including conflict zones, communication bridges, and what each brain needs the other to understand.</p>
+        <button onclick="explorerState.brainA='${nt.id}';explorerState.brainB=null;navigateTo('explorer')" class="px-5 py-2.5 rounded-lg font-display font-semibold text-sm text-deep-navy transition-all hover:opacity-90" style="background:${nt.color}">
+          <i class="fas fa-handshake mr-2"></i>Open Brain Pair Explorer
+        </button>
+      </div>`;
+  }
+  if (tab === 'growth') {
+    return `
+      <div class="bg-gradient-to-r from-mid-navy/60 to-light-navy/30 border border-light-navy/50 rounded-2xl p-6 mb-5">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-3"><i class="fas fa-comment-dots mr-2" style="color:${nt.color}"></i>What This Brain Needs to Hear</h4>
+        <p class="quote-text text-warm-white/90 text-lg leading-relaxed">${nt.needToHear}</p>
+      </div>
+      <div class="bg-mid-navy/40 border border-light-navy/30 rounded-2xl p-6 mb-5">
+        <h4 class="font-display font-semibold text-lg text-warm-white mb-2"><i class="fas fa-star mr-2 text-warm-amber"></i>Greatest Hidden Strength</h4>
+        <p class="text-steel-blue leading-relaxed">${nt.strength}</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        ${renderDimCard(nt, 'prognosis', 'Prognosis with Support', 'fa-chart-line')}
+        ${renderDimCard(nt, 'whatMissed', 'What Adults Miss About Themselves', 'fa-search')}
+      </div>`;
+  }
+  return '';
+}
+
+function renderDimCard(nt, key, label, icon) {
+  const val = nt[key];
+  if (!val) return '';
+  return `
+  <div class="dimension-card">
+    <div class="flex items-center gap-2 mb-2">
+      <i class="fas ${icon} text-sm" style="color:${nt.color}"></i>
+      <h5 class="font-display font-medium text-warm-white text-sm">${label}</h5>
+    </div>
+    <p class="text-steel-blue text-sm leading-relaxed">${val}</p>
+  </div>`;
+}
+
 function selectProfile(id) {
   currentProfile = id;
+  currentProfileTab = 'overview';
+  document.getElementById('app').innerHTML = renderProfiles();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectProfileTab(tab) {
+  currentProfileTab = tab;
   document.getElementById('app').innerHTML = renderProfiles();
 }
 
