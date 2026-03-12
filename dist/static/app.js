@@ -21,7 +21,14 @@ function navigateTo(section, sub) {
   switch(section) {
     case 'home': app.innerHTML = renderHome(); break;
     case 'profiles': currentProfile = sub || currentProfile || 'adhd-c'; currentProfileTab = 'overview'; app.innerHTML = renderProfiles(); break;
-    case 'assessment': app.innerHTML = renderAssessmentV2(); break;
+    case 'assessment':
+      app.innerHTML = renderAssessmentV2();
+      // If we landed on the results screen, initialise the radar chart explicitly
+      // (innerHTML does NOT execute <script> tags)
+      if (ndaState && ndaState.screen === 'results' && ndaState.results && typeof initNDARadarChart === 'function') {
+        initNDARadarChart(ndaState.results);
+      }
+      break;
     case 'explorer': app.innerHTML = renderExplorer(); break;
     case 'about': app.innerHTML = renderAbout(); break;
   }

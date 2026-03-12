@@ -102,41 +102,59 @@ function renderStateLoadNotice(r) {
     </div>`;
 }
 
-// ── RADAR CHART ───────────────────────────────────────────────
+// ── RADAR CHART HTML (no inline script — chart init is called explicitly) ────
 function renderNDARadar(r) {
-  const labels = RADAR_ORDER.map(id => PROFILE_META[id].radarLabel);
-  const data   = RADAR_ORDER.map(id => r.finalScores[id] || 0);
-  const colors = RADAR_ORDER.map(id => r.bandColors[id] || '#9CA3AF');
-  const labelsJSON  = JSON.stringify(labels);
-  const dataJSON    = JSON.stringify(data);
-  const colorsJSON  = JSON.stringify(colors);
-
   return `
-  <div class="bg-mid-navy/60 border border-light-navy/40 rounded-2xl p-6 mb-6">
+  <div class="bg-mid-navy/60 border border-light-navy/40 rounded-2xl p-6 mb-6" id="nda-radar-wrapper">
     <h3 class="font-display font-semibold text-lg text-warm-white mb-1 text-center">Your Neurotype Fingerprint</h3>
     <p class="text-steel-blue/70 text-xs text-center mb-4 max-w-md mx-auto">This chart shows your relative pattern across all 14 neurotype profiles. Higher scores indicate stronger pattern alignment — not severity or impairment.</p>
-    <div style="position:relative;width:100%;max-width:480px;margin:0 auto;">
+    <div style="position:relative;width:100%;max-width:500px;margin:0 auto;">
       <canvas id="ndaRadarChart" aria-label="Neurotype fingerprint radar chart" role="img"></canvas>
     </div>
-  </div>
-  <script>
-  (function waitForChart() {
-    if (typeof Chart === 'undefined') { setTimeout(waitForChart, 80); return; }
+    <p class="text-steel-blue/40 text-xs text-center mt-3" id="nda-radar-loading">Loading chart…</p>
+  </div>`;
+}
+
+// ── RADAR CHART INITIALISER — called explicitly after DOM is painted ──────────
+function initNDARadarChart(r) {
+  // Poll until the canvas element exists in the DOM (handles any render delay)
+  function attemptInit(attemptsLeft) {
     const canvas = document.getElementById('ndaRadarChart');
-    if (!canvas) return;
-    if (canvas._chartInst) { canvas._chartInst.destroy(); }
+    if (!canvas) {
+      if (attemptsLeft > 0) { setTimeout(() => attemptInit(attemptsLeft - 1), 60); }
+      return;
+    }
+    if (typeof Chart === 'undefined') {
+      if (attemptsLeft > 0) { setTimeout(() => attemptInit(attemptsLeft - 1), 100); }
+      return;
+    }
+
+    // Remove "Loading chart…" helper text
+    const loadingMsg = document.getElementById('nda-radar-loading');
+    if (loadingMsg) loadingMsg.remove();
+
+    // Destroy any previous instance
+    if (canvas._ndaChart) {
+      try { canvas._ndaChart.destroy(); } catch(e) {}
+      canvas._ndaChart = null;
+    }
+
+    const labels = RADAR_ORDER.map(id => PROFILE_META[id].radarLabel);
+    const data   = RADAR_ORDER.map(id => r.finalScores[id] || 0);
+    const colors = RADAR_ORDER.map(id => r.bandColors[id] || '#9CA3AF');
+
     const ctx = canvas.getContext('2d');
-    canvas._chartInst = new Chart(ctx, {
+    canvas._ndaChart = new Chart(ctx, {
       type: 'radar',
       data: {
-        labels: ${labelsJSON},
+        labels: labels,
         datasets: [{
           label: 'Your Profile',
-          data: ${dataJSON},
+          data: data,
           borderColor: '#a20927',
           borderWidth: 2.5,
           backgroundColor: 'rgba(162,9,39,0.13)',
-          pointBackgroundColor: ${colorsJSON},
+          pointBackgroundColor: colors,
           pointBorderColor: '#1A2A3A',
           pointBorderWidth: 1.5,
           pointRadius: 5,
@@ -160,8 +178,8 @@ function renderNDARadar(r) {
               color: '#6B7280',
               backdropColor: 'transparent'
             },
-            grid: { color: 'rgba(100,120,140,0.35)', lineWidth: 1 },
-            angleLines: { color: 'rgba(100,120,140,0.3)', lineWidth: 1 },
+            grid:       { color: 'rgba(100,120,140,0.35)', lineWidth: 1 },
+            angleLines: { color: 'rgba(100,120,140,0.3)',  lineWidth: 1 },
             pointLabels: {
               font: { size: 10, family: "'Space Grotesk', system-ui, sans-serif", weight: '500' },
               color: '#A0B4C8',
@@ -181,7 +199,11 @@ function renderNDARadar(r) {
               title: function(items) { return items[0].label; },
               label: function(item) {
                 const s = item.raw;
-                const band = s <= 20 ? 'Not Indicated' : s <= 40 ? 'Subclinical' : s <= 60 ? 'Moderate' : s <= 78 ? 'Elevated' : 'Very High';
+                const band = s <= 20 ? 'Not Indicated'
+                           : s <= 40 ? 'Subclinical'
+                           : s <= 60 ? 'Moderate'
+                           : s <= 78 ? 'Elevated'
+                           : 'Very High';
                 return ' Score: ' + s + ' — ' + band;
               }
             }
@@ -189,8 +211,10 @@ function renderNDARadar(r) {
         }
       }
     });
-  })();
-  </script>`;
+  }
+
+  // Start polling — give the browser a frame to paint first
+  setTimeout(() => attemptInit(20), 50);
 }
 
 // ── BAND LEGEND ───────────────────────────────────────────────

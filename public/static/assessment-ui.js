@@ -517,6 +517,11 @@ function ndaFinish() {
     ndaSave();
     document.getElementById('app').innerHTML = renderNDAResults();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Explicitly initialise the radar chart now that the canvas is in the DOM.
+    // (innerHTML does NOT execute <script> tags, so this must be a direct call.)
+    if (typeof initNDARadarChart === 'function') {
+      initNDARadarChart(ndaState.results);
+    }
   }, 3500);
 }
 
