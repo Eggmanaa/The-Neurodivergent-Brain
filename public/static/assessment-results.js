@@ -107,82 +107,88 @@ function renderNDARadar(r) {
   const labels = RADAR_ORDER.map(id => PROFILE_META[id].radarLabel);
   const data   = RADAR_ORDER.map(id => r.finalScores[id] || 0);
   const colors = RADAR_ORDER.map(id => r.bandColors[id] || '#9CA3AF');
+  const labelsJSON  = JSON.stringify(labels);
+  const dataJSON    = JSON.stringify(data);
+  const colorsJSON  = JSON.stringify(colors);
 
   return `
   <div class="bg-mid-navy/60 border border-light-navy/40 rounded-2xl p-6 mb-6">
     <h3 class="font-display font-semibold text-lg text-warm-white mb-1 text-center">Your Neurotype Fingerprint</h3>
-    <p class="text-steel-blue/70 text-xs text-center mb-6 max-w-md mx-auto">This chart shows your relative pattern across all 14 neurotype profiles. Higher scores indicate stronger pattern alignment — not severity or impairment.</p>
-    <div class="flex justify-center">
-      <canvas id="ndaRadarChart" width="460" height="460" style="max-width:100%;max-height:460px" aria-label="Neurotype fingerprint radar chart"></canvas>
+    <p class="text-steel-blue/70 text-xs text-center mb-4 max-w-md mx-auto">This chart shows your relative pattern across all 14 neurotype profiles. Higher scores indicate stronger pattern alignment — not severity or impairment.</p>
+    <div style="position:relative;width:100%;max-width:480px;margin:0 auto;">
+      <canvas id="ndaRadarChart" aria-label="Neurotype fingerprint radar chart" role="img"></canvas>
     </div>
   </div>
   <script>
-  (function() {
-    function initNDARadar() {
-      const canvas = document.getElementById('ndaRadarChart');
-      if (!canvas) return;
-      if (canvas._chartInstance) canvas._chartInstance.destroy();
-      
-      const ctx = canvas.getContext('2d');
-      canvas._chartInstance = new Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: ${JSON.stringify(labels)},
-          datasets: [{
-            label: 'Your Profile',
-            data: ${JSON.stringify(data)},
-            borderColor: '#a20927',
-            borderWidth: 2.5,
-            backgroundColor: 'rgba(162,9,39,0.12)',
-            pointBackgroundColor: ${JSON.stringify(colors)},
-            pointBorderColor: '#FFFFFF',
-            pointBorderWidth: 1.5,
-            pointRadius: 5,
-            pointHoverRadius: 7
-          }]
-        },
-        options: {
-          responsive: false,
-          scales: {
-            r: {
-              min: 0,
-              max: 100,
-              ticks: {
-                stepSize: 20,
-                display: true,
-                font: { size: 9 },
-                color: '#6B7280',
-                backdropColor: 'transparent'
-              },
-              grid: { color: 'rgba(55,65,81,0.5)', lineWidth: 1 },
-              angleLines: { color: 'rgba(55,65,81,0.4)', lineWidth: 1 },
-              pointLabels: {
-                font: { size: 11, family: 'Inter, system-ui, sans-serif' },
-                color: '#9CA3AF'
-              }
+  (function waitForChart() {
+    if (typeof Chart === 'undefined') { setTimeout(waitForChart, 80); return; }
+    const canvas = document.getElementById('ndaRadarChart');
+    if (!canvas) return;
+    if (canvas._chartInst) { canvas._chartInst.destroy(); }
+    const ctx = canvas.getContext('2d');
+    canvas._chartInst = new Chart(ctx, {
+      type: 'radar',
+      data: {
+        labels: ${labelsJSON},
+        datasets: [{
+          label: 'Your Profile',
+          data: ${dataJSON},
+          borderColor: '#a20927',
+          borderWidth: 2.5,
+          backgroundColor: 'rgba(162,9,39,0.13)',
+          pointBackgroundColor: ${colorsJSON},
+          pointBorderColor: '#1A2A3A',
+          pointBorderWidth: 1.5,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1,
+        scales: {
+          r: {
+            min: 0,
+            max: 100,
+            beginAtZero: true,
+            ticks: {
+              stepSize: 25,
+              display: true,
+              font: { size: 9 },
+              color: '#6B7280',
+              backdropColor: 'transparent'
+            },
+            grid: { color: 'rgba(100,120,140,0.35)', lineWidth: 1 },
+            angleLines: { color: 'rgba(100,120,140,0.3)', lineWidth: 1 },
+            pointLabels: {
+              font: { size: 10, family: "'Space Grotesk', system-ui, sans-serif", weight: '500' },
+              color: '#A0B4C8',
+              padding: 6
             }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const score = ctx.raw;
-                  const bands = ['Not Indicated','Not Indicated','Subclinical','Subclinical','Moderate','Moderate','Elevated','Elevated','Very High','Very High'];
-                  const band = score <= 20 ? 'Not Indicated' : score <= 40 ? 'Subclinical' : score <= 60 ? 'Moderate' : score <= 78 ? 'Elevated' : 'Very High';
-                  return \` Score: \${score} (\${band})\`;
-                }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1A2A3A',
+            borderColor: '#243447',
+            borderWidth: 1,
+            titleColor: '#E8E6E1',
+            bodyColor: '#A0B4C8',
+            callbacks: {
+              title: function(items) { return items[0].label; },
+              label: function(item) {
+                const s = item.raw;
+                const band = s <= 20 ? 'Not Indicated' : s <= 40 ? 'Subclinical' : s <= 60 ? 'Moderate' : s <= 78 ? 'Elevated' : 'Very High';
+                return ' Score: ' + s + ' — ' + band;
               }
             }
           }
         }
-      });
-    }
-    if (typeof Chart !== 'undefined') {
-      setTimeout(initNDARadar, 100);
-    } else {
-      document.addEventListener('DOMContentLoaded', initNDARadar);
-    }
+      }
+    });
   })();
   </script>`;
 }

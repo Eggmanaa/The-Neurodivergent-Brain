@@ -130,20 +130,9 @@ function renderNDAWelcome() {
     </div>
 
     <!-- Privacy -->
-    <p class="text-steel-blue/60 text-xs text-center mb-6">
+    <p class="text-steel-blue/60 text-xs text-center mb-8">
       <i class="fas fa-lock mr-1"></i>Your responses are processed locally in your browser. No personally identifiable data is stored.
     </p>
-
-    <!-- Context toggle -->
-    <div class="mb-6">
-      <button onclick="document.getElementById('contextToggle').classList.toggle('hidden')" class="w-full flex items-center justify-between px-4 py-3 bg-mid-navy/40 border border-light-navy/40 rounded-xl text-steel-blue hover:text-warm-white transition-all text-sm">
-        <span><i class="fas fa-sliders-h mr-2"></i>Customize your experience (optional)</span>
-        <i class="fas fa-chevron-down text-xs"></i>
-      </button>
-      <div id="contextToggle" class="hidden mt-3 bg-mid-navy/30 border border-light-navy/30 rounded-xl p-5">
-        ${renderContextForm()}
-      </div>
-    </div>
 
     <!-- CTA -->
     <button onclick="ndaBegin()" class="w-full py-4 rounded-xl font-display font-semibold text-lg text-white transition-all hover:opacity-90 hover:scale-[1.01] transform" style="background:#a20927">
@@ -329,7 +318,6 @@ function renderNDAScreen() {
 // ── LIKERT QUESTION RENDERER ──────────────────────────────────
 function renderLikertQuestions(items, screen) {
   return items.map((item, idx) => {
-    const answered = ndaState.responses[item.id] !== undefined;
     const val = ndaState.responses[item.id];
     return `
     <div class="mb-6 pb-6 border-b border-light-navy/20 last:border-0 section-enter" style="animation-delay:${idx * 30}ms">
@@ -339,11 +327,14 @@ function renderLikertQuestions(items, screen) {
       </div>
       <div class="grid grid-cols-5 gap-1.5 ml-7">
         ${NDA_LIKERT.map(opt => `
-          <button onclick="ndaAnswer('${item.id}', ${opt.value})" 
-            class="flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg border transition-all hover:scale-[1.02] transform ${val === opt.value ? 'border-[#a20927] text-white' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80 hover:text-warm-white'}"
+          <button
+            onclick="ndaAnswer('${item.id}', ${opt.value})"
+            data-qid="${item.id}"
+            data-val="${opt.value}"
+            class="nda-likert-btn flex flex-col items-center gap-1 py-2.5 px-1 rounded-lg border transition-all hover:scale-[1.02] transform ${val === opt.value ? 'border-[#a20927] text-white nda-selected' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80 hover:text-warm-white'}"
             style="${val === opt.value ? 'background:#a2092722;' : ''}"
             aria-label="${opt.label}" aria-pressed="${val === opt.value}">
-            <span class="font-bold text-sm ${val === opt.value ? 'text-white' : ''}">${opt.value}</span>
+            <span class="font-bold text-sm">${opt.value}</span>
             <span class="text-xs leading-tight text-center">${opt.shortLabel}</span>
           </button>`).join('')}
       </div>
@@ -372,8 +363,11 @@ function renderSectionedQuestions(sections) {
           </div>
           <div class="grid grid-cols-5 gap-1 ml-7">
             ${NDA_LIKERT.map(opt => `
-              <button onclick="ndaAnswer('${item.id}', ${opt.value})" 
-                class="flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all ${val === opt.value ? 'border-[#a20927] text-white' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
+              <button
+                onclick="ndaAnswer('${item.id}', ${opt.value})"
+                data-qid="${item.id}"
+                data-val="${opt.value}"
+                class="nda-likert-btn flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all ${val === opt.value ? 'border-[#a20927] text-white nda-selected' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
                 style="${val === opt.value ? 'background:#a2092722;' : ''}">
                 <span class="font-bold text-xs">${opt.value}</span>
                 <span class="text-xs">${opt.shortLabel}</span>
@@ -396,11 +390,17 @@ function renderBinaryQuestions(screen, items) {
             <span class="text-steel-blue/50 text-xs mr-2">${idx + 1}.</span>${item.text}
           </p>
           <div class="flex gap-3">
-            <button onclick="ndaAnswer('${item.id}', 0)" 
-              class="flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all ${val === 0 ? 'border-[#A8D5BA] text-[#A8D5BA] bg-[#A8D5BA]/10' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
+            <button
+              onclick="ndaAnswer('${item.id}', 0)"
+              data-qid="${item.id}"
+              data-val="0"
+              class="nda-binary-btn flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all ${val === 0 ? 'border-[#A8D5BA] text-[#A8D5BA] bg-[#A8D5BA]/10' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
               aria-pressed="${val === 0}">No</button>
-            <button onclick="ndaAnswer('${item.id}', 1)" 
-              class="flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all ${val === 1 ? 'border-[#a20927] text-[#a20927] bg-[#a20927]/10' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
+            <button
+              onclick="ndaAnswer('${item.id}', 1)"
+              data-qid="${item.id}"
+              data-val="1"
+              class="nda-binary-btn flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all ${val === 1 ? 'border-[#a20927] text-[#a20927] bg-[#a20927]/10' : 'border-light-navy/40 text-steel-blue hover:border-light-navy/80'}"
               aria-pressed="${val === 1}">Yes</button>
           </div>
         </div>`;
@@ -413,69 +413,66 @@ function ndaAnswer(itemId, value) {
   ndaState.responses[itemId] = value;
   ndaSave();
 
-  // Re-render the screen to update UI and check if all answered
   const screen = NDA_SCREENS[ndaState.screenIndex];
   const { items } = buildScreenItems(screen);
   const allAnswered = items.every(item => ndaState.responses[item.id] !== undefined);
 
-  // Update just the next button state and the remaining counter
-  const nextBtn = document.querySelector('button[onclick="ndaNextScreen()"], button[onclick="ndaFinish()"]');
-  if (nextBtn) {
-    if (allAnswered) {
-      nextBtn.disabled = false;
-      nextBtn.className = nextBtn.className.replace('opacity-40 cursor-not-allowed', 'hover:opacity-90 hover:scale-[1.02] transform');
+  // ── Update Likert buttons via data attributes (classList — no regex fragility) ──
+  document.querySelectorAll(`.nda-likert-btn[data-qid="${itemId}"]`).forEach(btn => {
+    const btnVal = parseInt(btn.getAttribute('data-val'), 10);
+    const isSelected = btnVal === value;
+    if (isSelected) {
+      btn.style.background = '#a2092722';
+      btn.style.borderColor = '#a20927';
+      btn.style.color = '#ffffff';
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.setAttribute('aria-pressed', 'false');
     }
+  });
+
+  // ── Update binary Yes/No buttons ──
+  document.querySelectorAll(`.nda-binary-btn[data-qid="${itemId}"]`).forEach(btn => {
+    const btnVal = parseInt(btn.getAttribute('data-val'), 10);
+    const isYes = btnVal === 1;
+    const isSelected = btnVal === value;
+    if (isSelected) {
+      btn.style.background = isYes ? 'rgba(162,9,39,0.1)' : 'rgba(168,213,186,0.1)';
+      btn.style.borderColor = isYes ? '#a20927' : '#A8D5BA';
+      btn.style.color = isYes ? '#a20927' : '#A8D5BA';
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.setAttribute('aria-pressed', 'false');
+    }
+  });
+
+  // ── Update next button enable state ──
+  const nextBtn = document.querySelector('button[onclick="ndaNextScreen()"], button[onclick="ndaFinish()"]');
+  if (nextBtn && allAnswered) {
+    nextBtn.disabled = false;
+    nextBtn.style.opacity = '1';
+    nextBtn.style.cursor = 'pointer';
   }
 
-  // Update the answer count text
+  // ── Update remaining counter ──
   const answered = items.filter(item => ndaState.responses[item.id] !== undefined).length;
   const remaining = items.length - answered;
   const counter = document.querySelector('.text-center.mt-4 p');
   if (counter) {
     if (remaining > 0) {
-      counter.innerHTML = `${remaining} question${remaining !== 1 ? 's' : ''} remaining on this page`;
+      counter.textContent = `${remaining} question${remaining !== 1 ? 's' : ''} remaining on this page`;
+      counter.style.color = '';
       counter.className = 'text-steel-blue/50 text-xs';
     } else {
-      counter.innerHTML = `<i class="fas fa-check mr-1"></i>All questions answered — continue when ready`;
+      counter.innerHTML = '<i class="fas fa-check mr-1"></i>All questions answered — continue when ready';
       counter.style.color = '#A8D5BA';
       counter.className = 'text-xs';
-    }
-  }
-
-  // Update the specific button visuals
-  const allBtns = document.querySelectorAll(`button[onclick*="ndaAnswer('${itemId}'"]`);
-  allBtns.forEach(btn => {
-    const btnVal = parseInt(btn.getAttribute('onclick').match(/ndaAnswer\('.*?', (\d+)\)/)?.[1]);
-    const isSelected = btnVal === value;
-    if (isSelected) {
-      btn.className = btn.className.replace('border-light-navy/40 text-steel-blue hover:border-light-navy/80 hover:text-warm-white', 'border-[#a20927] text-white');
-      btn.style.background = '#a2092722';
-      btn.setAttribute('aria-pressed', 'true');
-    } else {
-      btn.className = btn.className.replace('border-[#a20927] text-white', 'border-light-navy/40 text-steel-blue hover:border-light-navy/80 hover:text-warm-white');
-      btn.style.background = '';
-      btn.setAttribute('aria-pressed', 'false');
-    }
-  });
-
-  // For binary (MR) items, also update Yes/No button styles
-  const yesNoContainer = document.querySelector(`button[onclick="ndaAnswer('${itemId}', 1)"]`);
-  if (yesNoContainer) {
-    const noBtn = document.querySelector(`button[onclick="ndaAnswer('${itemId}', 0)"]`);
-    const yesBtn = document.querySelector(`button[onclick="ndaAnswer('${itemId}', 1)"]`);
-    if (noBtn) {
-      if (value === 0) {
-        noBtn.className = 'flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all border-[#A8D5BA] text-[#A8D5BA] bg-[#A8D5BA]/10';
-      } else {
-        noBtn.className = 'flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all border-light-navy/40 text-steel-blue hover:border-light-navy/80';
-      }
-    }
-    if (yesBtn) {
-      if (value === 1) {
-        yesBtn.className = 'flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all border-[#a20927] text-[#a20927] bg-[#a20927]/10';
-      } else {
-        yesBtn.className = 'flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all border-light-navy/40 text-steel-blue hover:border-light-navy/80';
-      }
     }
   }
 }

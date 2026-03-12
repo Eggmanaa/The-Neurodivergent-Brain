@@ -287,18 +287,18 @@ const NDA_SCREENS = [
     title: 'Internal Conflicts & Masking',
     icon: 'fa-mask',
     color: '#EC4899',
-    contextNote: 'These questions explore the experience of internal contradictions, masking, and the cost of appearing neurotypical.',
+    contextNote: 'These questions explore the experience of internal contradictions, masking, and the hidden cost of appearing functional.',
     questions: [
-      { id: 'Q117', text: 'I desperately crave structure and routine, but my own impulsivity or forgetfulness constantly undermines the routines I try to build.' },
+      { id: 'Q117', text: 'I crave structure and routine, but my own impulsivity or forgetfulness constantly undermines the routines I try to build.' },
       { id: 'Q118', text: 'I feel like two contradictory people — one who needs sameness, predictability, and order, and one who is driven toward novelty, chaos, and change.' },
       { id: 'Q119', text: 'I expend enormous energy appearing normal or capable in social situations and feel completely depleted or collapsed afterward.' },
-      { id: 'Q120', text: 'My emotional reactions are more intense and harder to regulate than what either my ADHD or my autism traits alone would seem to explain.' },
-      { id: 'Q121', text: 'I have deep, consuming special interests that resemble the autism pattern, but I also jump impulsively between them, leaving many unfinished — which resembles the ADHD pattern.' },
-      { id: 'Q122', text: 'I feel like my ADHD and autism traits cancel each other out in ways that make me seem high-functioning in public, but at enormous internal cost.' },
-      { id: 'Q123', text: 'The strategies that help my ADHD — flexibility, novelty, low structure — often conflict with what helps my autism — predictability, routine, sameness — and this tension is a constant source of exhaustion.' },
-      { id: 'Q124', text: 'I have been dismissed, misunderstood, or misdiagnosed multiple times because clinicians saw either the ADHD or the autism but not both simultaneously.' },
-      { id: 'Q125', text: 'I experience a kind of double imposter syndrome — I feel like I am not autistic enough and not ADHD enough to belong in either community, even though I relate deeply to both.' },
-      { id: 'Q126', text: 'The combination of needing to mask my autism AND manage my ADHD simultaneously makes everyday functioning significantly more effortful than it appears from the outside.' }
+      { id: 'Q120', text: 'My emotional reactions are more intense and harder to regulate than what my attention difficulties or social differences alone would seem to explain.' },
+      { id: 'Q121', text: 'I have deep, consuming special interests — but I also jump impulsively between them, leaving many unfinished. Both the depth and the abandonment feel like me.' },
+      { id: 'Q122', text: 'My need to blend in and appear capable masks how much I am actually struggling, so I look high-functioning in public at enormous internal cost.' },
+      { id: 'Q123', text: 'The strategies that help my scattered attention — flexibility, novelty, low structure — often directly conflict with what helps my need for sameness — predictability, routine, stability. This tension is a constant source of exhaustion.' },
+      { id: 'Q124', text: 'I have been dismissed, misunderstood, or misdiagnosed multiple times because others saw only one side of my struggles and missed the full picture.' },
+      { id: 'Q125', text: 'I experience a kind of double imposter syndrome — I feel like I am not struggling enough in one area, and not struggling enough in another, to belong in any community, even though I relate deeply to multiple experiences.' },
+      { id: 'Q126', text: 'The combination of needing to hide my social differences AND manage my attention and impulse difficulties simultaneously makes everyday functioning significantly more effortful than it appears from the outside.' }
     ],
     validityItems: []
   },
@@ -310,25 +310,25 @@ const NDA_SCREENS = [
     title: 'Daily Impact & Your Background',
     icon: 'fa-history',
     color: '#6B7280',
-    contextNote: 'These questions ask about the real-world impact of your challenges and your developmental history.',
+    contextNote: 'For "Daily Impact": rate how consistently each statement reflects your experience. For "Your Background": rate how true each statement is about your history (Never = not at all true · Almost Always = completely true).',
     sections: [
       {
         sectionTitle: 'Daily Impact',
         questions: [
-          { id: 'Q128', text: 'My attention and organization challenges show up across multiple areas of my life — school or work, home, and relationships — not just in one setting.' },
-          { id: 'Q131', text: 'My attention or social challenges cause meaningful impairment in at least one major life domain — work, school, relationships, or daily independence.' },
-          { id: 'Q134', text: 'My challenges have persisted despite my genuine efforts to address them through strategies, therapy, medication, or lifestyle changes.' },
-          { id: 'Q135', text: 'I have to work substantially harder than other people to meet ordinary expectations in daily life.' }
+          { id: 'Q128', text: 'My attention and organization difficulties show up across multiple areas of my life — work or school, home, and relationships — not just in one setting.' },
+          { id: 'Q131', text: 'My attention or social difficulties cause meaningful disruption in at least one major life area — work, school, relationships, or daily independence.' },
+          { id: 'Q134', text: 'These difficulties persist even when I genuinely try to address them through strategies, adjustments, or support.' },
+          { id: 'Q135', text: 'I have to work substantially harder than people around me to meet the same ordinary expectations.' }
         ]
       },
       {
         sectionTitle: 'Your Background',
         questions: [
-          { id: 'Q127', text: 'The difficulties I experience with attention, focus, or organization have been present since childhood — they are not new.' },
-          { id: 'Q129', text: 'My social communication differences, rigidity, or sensory sensitivities have been present since I was a child.' },
-          { id: 'Q130', text: 'My reading, spelling, or language difficulties began when I was learning to read and have continued throughout my life.' },
-          { id: 'Q132', text: 'My current difficulties began recently and are clearly linked to a specific life stressor, trauma, or illness.', isInverse: true },
-          { id: 'Q133', text: 'A parent, sibling, or close biological relative has been diagnosed with ADHD, autism, dyslexia, or a similar neurodevelopmental condition.' }
+          { id: 'Q127', text: 'The difficulties I experience with attention, focus, or organization have been part of my life since childhood.' },
+          { id: 'Q129', text: 'My social communication differences, need for sameness, or sensory sensitivities have been present since I was young.' },
+          { id: 'Q130', text: 'My reading, spelling, or language difficulties started when I was learning to read and have continued throughout my life.' },
+          { id: 'Q132', text: 'My current difficulties seem to have started recently in response to a specific stressor, trauma, or illness — they are not longstanding.', isInverse: true },
+          { id: 'Q133', text: 'A parent, sibling, or close biological relative has been identified with attention difficulties, social differences, learning differences, or similar traits.' }
         ]
       }
     ],
@@ -342,11 +342,11 @@ const NDA_SCREENS = [
     title: 'Right Now',
     icon: 'fa-clock',
     color: '#6B7280',
-    contextNote: 'These questions are about how things are for you right now — not your usual baseline. Just three questions.',
+    contextNote: 'Just three questions about your current state. Rate how true each statement is for you right now: Never = not at all · Almost Always = very much so.',
     questions: [
-      { id: 'Q136', text: 'My current stress level is significantly worsening my concentration, mood, or emotional regulation.' },
-      { id: 'Q137', text: 'Poor sleep, exhaustion, or burnout is significantly worsening my current symptoms.' },
-      { id: 'Q138', text: 'My difficulties have become noticeably worse in the past 3 months because of burnout, panic, trauma, illness, or major life disruption.' }
+      { id: 'Q136', text: 'My current stress level is significantly worsening my concentration, mood, or emotional regulation right now.' },
+      { id: 'Q137', text: 'Poor sleep, exhaustion, or burnout is significantly affecting how I am functioning right now.' },
+      { id: 'Q138', text: 'My difficulties feel noticeably worse recently — in the past few months — compared to my usual baseline.' }
     ],
     validityItems: []
   },
